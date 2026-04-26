@@ -11,40 +11,38 @@
 else
 {
     <SectionHeader Title="Grupos" Subtitle="CRUD de grupos del torneo.">
-        <button @onclick="NewItem">Nuevo grupo</button>
+        <button @onclick="OpenNewModal">Nuevo grupo</button>
     </SectionHeader>
 
-    <div class="page-grid">
-        <section class="panel panel-form">
-            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-                <div class="form-grid single-column">
-                    <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
-                </div>
-                <div class="actions-row">
-                    <button type="submit">Guardar</button>
-                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-                </div>
-            </EditForm>
-        </section>
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead><tr><th>Grupo</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdGrupo)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
 
-        <section class="panel panel-table">
-            <table>
-                <thead><tr><th>Grupo</th><th></th></tr></thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>@item.Nombre</td>
-                            <td class="actions-cell">
-                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                                <button class="danger" @onclick="() => DeleteAsync(item.IdGrupo)">Eliminar</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
-    </div>
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice el grupo." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid single-column">
+                <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+        </EditForm>
+    </AppModal>
 }
 
 @code {

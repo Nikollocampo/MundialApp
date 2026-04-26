@@ -12,53 +12,52 @@
 else
 {
     <SectionHeader Title="Estadios" Subtitle="CRUD de estadios de la fase de grupos.">
-        <button @onclick="NewItem">Nuevo estadio</button>
+        <button @onclick="OpenNewModal">Nuevo estadio</button>
     </SectionHeader>
 
-    <div class="page-grid">
-        <section class="panel panel-form">
-            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-                <div class="form-grid two-columns">
-                    <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
-                    <div><label>Capacidad</label><InputNumber @bind-Value="currentItem.Capacidad" /></div>
-                    <div>
-                        <label>Ciudad</label>
-                        <InputSelect @bind-Value="currentItem.IdCiudad">
-                            @foreach (var item in ciudades)
-                            {
-                                <option value="@item.Id">@item.Nombre</option>
-                            }
-                        </InputSelect>
-                    </div>
-                </div>
-                <div class="actions-row">
-                    <button type="submit">Guardar</button>
-                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-                </div>
-            </EditForm>
-        </section>
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead><tr><th>Estadio</th><th>Ciudad</th><th>País</th><th>Capacidad</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>@item.Ciudad</td>
+                        <td>@item.Pais</td>
+                        <td>@item.Capacidad</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdEstadio)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
 
-        <section class="panel panel-table">
-            <table>
-                <thead><tr><th>Estadio</th><th>Ciudad</th><th>País</th><th>Capacidad</th><th></th></tr></thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>@item.Nombre</td>
-                            <td>@item.Ciudad</td>
-                            <td>@item.Pais</td>
-                            <td>@item.Capacidad</td>
-                            <td class="actions-cell">
-                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                                <button class="danger" @onclick="() => DeleteAsync(item.IdEstadio)">Eliminar</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
-    </div>
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice el estadio." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div><label>Capacidad</label><InputNumber @bind-Value="currentItem.Capacidad" /></div>
+                <div>
+                    <label>Ciudad</label>
+                    <InputSelect @bind-Value="currentItem.IdCiudad">
+                        <option value="0">Seleccione...</option>
+                        @foreach (var item in ciudades)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+        </EditForm>
+    </AppModal>
 }
 
 @code {
@@ -79,6 +78,11 @@ else
 
     private async Task SaveAsync()
     {
+        if (currentItem.IdCiudad == 0)
+        {
+            return;
+        }
+
         await Service.SaveAsync(currentItem);
         await LoadAsync();
         CloseModal();
@@ -124,5 +128,5 @@ else
         NewItem();
     }
 
-    private void SetDefaults() => currentItem.IdCiudad = ciudades.FirstOrDefault()?.Id ?? 0;
+    private void SetDefaults() => currentItem.IdCiudad = 0;
 }

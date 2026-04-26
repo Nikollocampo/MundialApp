@@ -12,68 +12,67 @@
 else
 {
     <SectionHeader Title="Gestión de jugadores" Subtitle="CRUD de jugadores por equipo.">
-        <button @onclick="NewItem">Nuevo jugador</button>
+        <button @onclick="OpenNewModal">Nuevo jugador</button>
     </SectionHeader>
 
-    <div class="page-grid">
-        <section class="panel panel-form">
-            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-                <div class="form-grid two-columns">
-                    <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
-                    <div>
-                        <label>Equipo</label>
-                        <InputSelect @bind-Value="currentItem.IdEquipo">
-                            @foreach (var item in equipos)
-                            {
-                                <option value="@item.Id">@item.Nombre</option>
-                            }
-                        </InputSelect>
-                    </div>
-                    <div><label>Posición</label><InputText @bind-Value="currentItem.Posicion" /></div>
-                    <div><label>Fecha nacimiento</label><InputDate @bind-Value="currentItem.FechaNacimiento" /></div>
-                    <div><label>Edad</label><InputNumber @bind-Value="currentItem.Edad" /></div>
-                    <div><label>Costo</label><InputNumber @bind-Value="currentItem.Costo" /></div>
-                    <div><label>Peso</label><InputNumber @bind-Value="currentItem.Peso" /></div>
-                    <div><label>Altura</label><InputNumber @bind-Value="currentItem.Altura" /></div>
-                </div>
-                <div class="actions-row">
-                    <button type="submit">Guardar</button>
-                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-                </div>
-            </EditForm>
-        </section>
-
-        <section class="panel panel-table">
-            <table>
-                <thead>
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Equipo</th>
+                    <th>Posición</th>
+                    <th>Edad</th>
+                    <th>Costo</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
                     <tr>
-                        <th>Nombre</th>
-                        <th>Equipo</th>
-                        <th>Posición</th>
-                        <th>Edad</th>
-                        <th>Costo</th>
-                        <th></th>
+                        <td>@item.Nombre</td>
+                        <td>@item.Equipo</td>
+                        <td>@item.Posicion</td>
+                        <td>@item.Edad</td>
+                        <td>@item.Costo.ToString("C")</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdJugador)">Eliminar</button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>@item.Nombre</td>
-                            <td>@item.Equipo</td>
-                            <td>@item.Posicion</td>
-                            <td>@item.Edad</td>
-                            <td>@item.Costo.ToString("C")</td>
-                            <td class="actions-cell">
-                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                                <button class="danger" @onclick="() => DeleteAsync(item.IdJugador)">Eliminar</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
-    </div>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice la información del jugador." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div>
+                    <label>Equipo</label>
+                    <InputSelect @bind-Value="currentItem.IdEquipo">
+                        <option value="0">Seleccione...</option>
+                        @foreach (var item in equipos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div><label>Posición</label><InputText @bind-Value="currentItem.Posicion" /></div>
+                <div><label>Fecha nacimiento</label><InputDate @bind-Value="currentItem.FechaNacimiento" /></div>
+                <div><label>Edad</label><InputNumber @bind-Value="currentItem.Edad" /></div>
+                <div><label>Costo</label><InputNumber @bind-Value="currentItem.Costo" /></div>
+                <div><label>Peso</label><InputNumber @bind-Value="currentItem.Peso" /></div>
+                <div><label>Altura</label><InputNumber @bind-Value="currentItem.Altura" /></div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+        </EditForm>
+    </AppModal>
 }
 
 @code {
@@ -94,6 +93,11 @@ else
 
     private async Task SaveAsync()
     {
+        if (currentItem.IdEquipo == 0)
+        {
+            return;
+        }
+
         await PlayerService.SaveAsync(currentItem);
         await LoadAsync();
         CloseModal();
@@ -149,6 +153,6 @@ else
 
     private void SetDefaults()
     {
-        currentItem.IdEquipo = equipos.FirstOrDefault()?.Id ?? 0;
+        currentItem.IdEquipo = 0;
     }
 }

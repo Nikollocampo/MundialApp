@@ -11,46 +11,44 @@
 else
 {
     <SectionHeader Title="Países" Subtitle="CRUD de países participantes y anfitriones.">
-        <button @onclick="NewItem">Nuevo país</button>
+        <button @onclick="OpenNewModal">Nuevo país</button>
     </SectionHeader>
 
-    <div class="page-grid">
-        <section class="panel panel-form">
-            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-                <div class="form-grid two-columns">
-                    <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
-                    <div><label>MSNM</label><InputNumber @bind-Value="currentItem.Msnm" /></div>
-                    <div class="checkbox-field">
-                        <label><InputCheckbox @bind-Value="currentItem.EsAnfitrion" /> Es anfitrión</label>
-                    </div>
-                </div>
-                <div class="actions-row">
-                    <button type="submit">Guardar</button>
-                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-                </div>
-            </EditForm>
-        </section>
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead><tr><th>Nombre</th><th>MSNM</th><th>Anfitrión</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>@item.Msnm</td>
+                        <td>@(item.EsAnfitrion ? "Sí" : "No")</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdPais)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
 
-        <section class="panel panel-table">
-            <table>
-                <thead><tr><th>Nombre</th><th>MSNM</th><th>Anfitrión</th><th></th></tr></thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>@item.Nombre</td>
-                            <td>@item.Msnm</td>
-                            <td>@(item.EsAnfitrion ? "Sí" : "No")</td>
-                            <td class="actions-cell">
-                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                                <button class="danger" @onclick="() => DeleteAsync(item.IdPais)">Eliminar</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
-    </div>
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice el país." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div><label>MSNM</label><InputNumber @bind-Value="currentItem.Msnm" /></div>
+                <div class="checkbox-field">
+                    <label><InputCheckbox @bind-Value="currentItem.EsAnfitrion" /> Es anfitrión</label>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+        </EditForm>
+    </AppModal>
 }
 
 @code {

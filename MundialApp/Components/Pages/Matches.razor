@@ -12,83 +12,84 @@
 else
 {
     <SectionHeader Title="Gestión de partidos" Subtitle="Partidos de la fase de grupos.">
-        <button @onclick="NewItem">Nuevo partido</button>
+        <button @onclick="OpenNewModal">Nuevo partido</button>
     </SectionHeader>
 
-    <div class="page-grid">
-        <section class="panel panel-form">
-            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-                <div class="form-grid two-columns">
-                    <div>
-                        <label>Estadio</label>
-                        <InputSelect @bind-Value="currentItem.IdEstadio">
-                            @foreach (var item in estadios)
-                            {
-                                <option value="@item.Id">@item.Nombre</option>
-                            }
-                        </InputSelect>
-                    </div>
-                    <div>
-                        <label>Fecha</label>
-                        <InputDate @bind-Value="currentItem.Fecha" />
-                    </div>
-                    <div>
-                        <label>Local</label>
-                        <InputSelect @bind-Value="currentItem.IdLocal">
-                            @foreach (var item in equipos)
-                            {
-                                <option value="@item.Id">@item.Nombre</option>
-                            }
-                        </InputSelect>
-                    </div>
-                    <div>
-                        <label>Visitante</label>
-                        <InputSelect @bind-Value="currentItem.IdVisitante">
-                            @foreach (var item in equipos)
-                            {
-                                <option value="@item.Id">@item.Nombre</option>
-                            }
-                        </InputSelect>
-                    </div>
-                </div>
-                <div class="actions-row">
-                    <button type="submit">Guardar</button>
-                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-                </div>
-            </EditForm>
-        </section>
-
-        <section class="panel panel-table">
-            <table>
-                <thead>
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Partido</th>
+                    <th>Estadio</th>
+                    <th>Ciudad</th>
+                    <th>País</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
                     <tr>
-                        <th>Fecha</th>
-                        <th>Partido</th>
-                        <th>Estadio</th>
-                        <th>Ciudad</th>
-                        <th>País</th>
-                        <th></th>
+                        <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@item.EquipoLocal vs @item.EquipoVisitante</td>
+                        <td>@item.Estadio</td>
+                        <td>@item.Ciudad</td>
+                        <td>@item.Pais</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdPartido)">Eliminar</button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-                            <td>@item.EquipoLocal vs @item.EquipoVisitante</td>
-                            <td>@item.Estadio</td>
-                            <td>@item.Ciudad</td>
-                            <td>@item.Pais</td>
-                            <td class="actions-cell">
-                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                                <button class="danger" @onclick="() => DeleteAsync(item.IdPartido)">Eliminar</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
-    </div>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice el partido de fase de grupos." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div>
+                    <label>Estadio</label>
+                    <InputSelect @bind-Value="currentItem.IdEstadio">
+                        <option value="0">Seleccione...</option>
+                        @foreach (var item in estadios)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>Fecha</label>
+                    <InputDate @bind-Value="currentItem.Fecha" />
+                </div>
+                <div>
+                    <label>Local</label>
+                    <InputSelect @bind-Value="currentItem.IdLocal">
+                        <option value="0">Seleccione...</option>
+                        @foreach (var item in equipos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>Visitante</label>
+                    <InputSelect @bind-Value="currentItem.IdVisitante">
+                        <option value="0">Seleccione...</option>
+                        @foreach (var item in equipos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+        </EditForm>
+    </AppModal>
 }
 
 @code {
@@ -111,6 +112,11 @@ else
 
     private async Task SaveAsync()
     {
+        if (currentItem.IdEstadio == 0 || currentItem.IdLocal == 0 || currentItem.IdVisitante == 0)
+        {
+            return;
+        }
+
         if (currentItem.IdLocal == currentItem.IdVisitante)
         {
             return;
@@ -167,8 +173,8 @@ else
 
     private void SetDefaults()
     {
-        currentItem.IdEstadio = estadios.FirstOrDefault()?.Id ?? 0;
-        currentItem.IdLocal = equipos.FirstOrDefault()?.Id ?? 0;
-        currentItem.IdVisitante = equipos.Skip(1).FirstOrDefault()?.Id ?? currentItem.IdLocal;
+        currentItem.IdEstadio = 0;
+        currentItem.IdLocal = 0;
+        currentItem.IdVisitante = 0;
     }
 }

@@ -11,44 +11,42 @@
 else
 {
     <SectionHeader Title="Confederaciones" Subtitle="CRUD de confederaciones del mundial.">
-        <button @onclick="NewItem">Nueva confederación</button>
+        <button @onclick="OpenNewModal">Nueva confederación</button>
     </SectionHeader>
 
-    <div class="page-grid">
-        <section class="panel panel-form">
-            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-                <div class="form-grid two-columns">
-                    <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
-                    <div><label>Cupos</label><InputNumber @bind-Value="currentItem.CuposMundial" /></div>
-                    <div><label>Fecha creación</label><InputDate @bind-Value="fechaCreacion" /></div>
-                </div>
-                <div class="actions-row">
-                    <button type="submit">Guardar</button>
-                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-                </div>
-            </EditForm>
-        </section>
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead><tr><th>Nombre</th><th>Cupos</th><th>Fecha</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>@item.CuposMundial</td>
+                        <td>@item.FechaCreacion?.ToString("dd/MM/yyyy")</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdConfederacion)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
 
-        <section class="panel panel-table">
-            <table>
-                <thead><tr><th>Nombre</th><th>Cupos</th><th>Fecha</th><th></th></tr></thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>@item.Nombre</td>
-                            <td>@item.CuposMundial</td>
-                            <td>@item.FechaCreacion?.ToString("dd/MM/yyyy")</td>
-                            <td class="actions-cell">
-                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                                <button class="danger" @onclick="() => DeleteAsync(item.IdConfederacion)">Eliminar</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
-    </div>
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice la confederación." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div><label>Cupos</label><InputNumber @bind-Value="currentItem.CuposMundial" /></div>
+                <div><label>Fecha creación</label><InputDate @bind-Value="fechaCreacion" /></div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+        </EditForm>
+    </AppModal>
 }
 
 @code {

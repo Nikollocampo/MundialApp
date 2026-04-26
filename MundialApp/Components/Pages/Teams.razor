@@ -63,6 +63,7 @@ else
                 <div>
                     <label>País</label>
                     <InputSelect @bind-Value="currentItem.IdPais" @bind-Value:after="SyncTeamNameFromCountry">
+                        <option value="0">Seleccione...</option>
                         @foreach (var item in paises)
                         {
                             <option value="@item.Id">@item.Nombre</option>
@@ -72,6 +73,7 @@ else
                 <div>
                     <label>Grupo</label>
                     <InputSelect @bind-Value="currentItem.IdGrupo">
+                        <option value="0">Seleccione...</option>
                         @foreach (var item in grupos)
                         {
                             <option value="@item.Id">@item.Nombre</option>
@@ -81,6 +83,7 @@ else
                 <div>
                     <label>Confederación</label>
                     <InputSelect @bind-Value="currentItem.IdConfederacion">
+                        <option value="0">Seleccione...</option>
                         @foreach (var item in confederaciones)
                         {
                             <option value="@item.Id">@item.Nombre</option>
@@ -128,6 +131,11 @@ else
 
     private async Task SaveAsync()
     {
+        if (currentItem.IdGrupo == 0 || currentItem.IdPais == 0 || currentItem.IdConfederacion == 0)
+        {
+            return;
+        }
+
         await TeamService.SaveAsync(currentItem);
         await LoadAsync();
         CloseModal();
@@ -202,8 +210,8 @@ else
 
     private void SetDefaults()
     {
-        currentItem.IdGrupo = grupos.FirstOrDefault()?.Id ?? 0;
-        currentItem.IdPais = paises.FirstOrDefault()?.Id ?? 0;
-        currentItem.IdConfederacion = confederaciones.FirstOrDefault()?.Id ?? 0;
+        currentItem.IdGrupo = 0;
+        currentItem.IdPais = 0;
+        currentItem.IdConfederacion = 0;
     }
 }

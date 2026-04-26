@@ -12,52 +12,51 @@
 else
 {
     <SectionHeader Title="Directores técnicos" Subtitle="CRUD de directores técnicos por equipo.">
-        <button @onclick="NewItem">Nuevo director técnico</button>
+        <button @onclick="OpenNewModal">Nuevo director técnico</button>
     </SectionHeader>
 
-    <div class="page-grid">
-        <section class="panel panel-form">
-            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-                <div class="form-grid two-columns">
-                    <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
-                    <div><label>Nacionalidad</label><InputText @bind-Value="currentItem.Nacionalidad" /></div>
-                    <div>
-                        <label>Equipo</label>
-                        <InputSelect @bind-Value="currentItem.IdEquipo">
-                            @foreach (var item in equipos)
-                            {
-                                <option value="@item.Id">@item.Nombre</option>
-                            }
-                        </InputSelect>
-                    </div>
-                </div>
-                <div class="actions-row">
-                    <button type="submit">Guardar</button>
-                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-                </div>
-            </EditForm>
-        </section>
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead><tr><th>Nombre</th><th>Nacionalidad</th><th>Equipo</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>@item.Nacionalidad</td>
+                        <td>@item.Equipo</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdDt)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
 
-        <section class="panel panel-table">
-            <table>
-                <thead><tr><th>Nombre</th><th>Nacionalidad</th><th>Equipo</th><th></th></tr></thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>@item.Nombre</td>
-                            <td>@item.Nacionalidad</td>
-                            <td>@item.Equipo</td>
-                            <td class="actions-cell">
-                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                                <button class="danger" @onclick="() => DeleteAsync(item.IdDt)">Eliminar</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
-    </div>
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice el director técnico." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div><label>Nacionalidad</label><InputText @bind-Value="currentItem.Nacionalidad" /></div>
+                <div>
+                    <label>Equipo</label>
+                    <InputSelect @bind-Value="currentItem.IdEquipo">
+                        <option value="0">Seleccione...</option>
+                        @foreach (var item in equipos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+        </EditForm>
+    </AppModal>
 }
 
 @code {
@@ -78,6 +77,11 @@ else
 
     private async Task SaveAsync()
     {
+        if (currentItem.IdEquipo == 0)
+        {
+            return;
+        }
+
         await Service.SaveAsync(currentItem);
         await LoadAsync();
         CloseModal();
@@ -123,5 +127,5 @@ else
         NewItem();
     }
 
-    private void SetDefaults() => currentItem.IdEquipo = equipos.FirstOrDefault()?.Id ?? 0;
+    private void SetDefaults() => currentItem.IdEquipo = 0;
 }

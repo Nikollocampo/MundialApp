@@ -11,68 +11,67 @@
 else
 {
     <SectionHeader Title="Gestión de usuarios" Subtitle="Solo el administrador puede crear nuevos usuarios.">
-        <button @onclick="NewItem">Nuevo usuario</button>
+        <button @onclick="OpenNewModal">Nuevo usuario</button>
     </SectionHeader>
 
-    <div class="page-grid">
-        <section class="panel panel-form">
-            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-                <div class="form-grid two-columns">
-                    <div><label>Cédula</label><InputText @bind-Value="currentItem.Cedula" /></div>
-                    <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
-                    <div><label>Correo</label><InputText @bind-Value="currentItem.Correo" /></div>
-                    <div><label>Teléfono</label><InputText @bind-Value="currentItem.Telefono" /></div>
-                    <div><label>Contraseña</label><InputText @bind-Value="currentItem.Contrasena" /></div>
-                    <div>
-                        <label>Rol</label>
-                        <InputSelect @bind-Value="currentItem.Rol">
-                            <option value="ADMINISTRADOR">ADMINISTRADOR</option>
-                            <option value="TRADICIONAL">TRADICIONAL</option>
-                            <option value="ESPORADICO">ESPORADICO</option>
-                        </InputSelect>
-                    </div>
-                </div>
-                <div class="actions-row">
-                    <button type="submit">Guardar</button>
-                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-                </div>
-            </EditForm>
-        </section>
-
-        <section class="panel panel-table">
-            <table>
-                <thead>
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead>
+                <tr>
+                    <th>Cédula</th>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
                     <tr>
-                        <th>Cédula</th>
-                        <th>Nombre</th>
-                        <th>Correo</th>
-                        <th>Rol</th>
-                        <th></th>
+                        <td>@item.Cedula</td>
+                        <td>@item.Nombre</td>
+                        <td>@item.Correo</td>
+                        <td>@item.Rol</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.Cedula)">Eliminar</button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>@item.Cedula</td>
-                            <td>@item.Nombre</td>
-                            <td>@item.Correo</td>
-                            <td>@item.Rol</td>
-                            <td class="actions-cell">
-                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                                <button class="danger" @onclick="() => DeleteAsync(item.Cedula)">Eliminar</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
-    </div>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice un usuario del sistema." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div><label>Cédula</label><InputText @bind-Value="currentItem.Cedula" /></div>
+                <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div><label>Correo</label><InputText @bind-Value="currentItem.Correo" /></div>
+                <div><label>Teléfono</label><InputText @bind-Value="currentItem.Telefono" /></div>
+                <div><label>Contraseña</label><InputText @bind-Value="currentItem.Contrasena" /></div>
+                <div>
+                    <label>Rol</label>
+                    <InputSelect @bind-Value="currentItem.Rol">
+                        <option value="">Seleccione...</option>
+                        <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                        <option value="TRADICIONAL">TRADICIONAL</option>
+                        <option value="ESPORADICO">ESPORADICO</option>
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+        </EditForm>
+    </AppModal>
 }
 
 @code {
     private List<Models.Entities.Usuario> items = new();
-    private Models.Entities.Usuario currentItem = new() { Rol = "TRADICIONAL" };
+    private Models.Entities.Usuario currentItem = new() { Rol = string.Empty };
     private bool isModalOpen;
     private string modalTitle = "Nuevo usuario";
 
@@ -85,6 +84,11 @@ else
 
     private async Task SaveAsync()
     {
+        if (string.IsNullOrWhiteSpace(currentItem.Rol))
+        {
+            return;
+        }
+
         await UserService.SaveAsync(currentItem);
         await LoadAsync();
         CloseModal();
@@ -116,7 +120,7 @@ else
         }
     }
 
-    private void NewItem() => currentItem = new Models.Entities.Usuario { Rol = "TRADICIONAL" };
+    private void NewItem() => currentItem = new Models.Entities.Usuario { Rol = string.Empty };
 
     private void OpenNewModal()
     {
