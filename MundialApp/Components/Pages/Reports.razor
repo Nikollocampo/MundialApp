@@ -53,15 +53,21 @@ else
 
         <section class="panel">
             <h3>Valor total por equipo y confederación</h3>
-            <label>Confederación</label>
-            <InputSelect @bind-Value="selectedConfederacionId">
-                <option value="0">Seleccione</option>
-                @foreach (var confederacion in confederaciones)
-                {
-                    <option value="@confederacion.Id">@confederacion.Nombre</option>
-                }
-            </InputSelect>
-            <button @onclick="GenerateTeamValueReportAsync">Generar PDF</button>
+            <div class="form-grid single-column">
+                <div>
+                    <label>Confederación</label>
+                    <InputSelect @bind-Value="selectedConfederacionId">
+                        <option value="0">Seleccione</option>
+                        @foreach (var confederacion in confederaciones)
+                        {
+                            <option value="@confederacion.Id">@confederacion.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="actions-row">
+                    <button @onclick="GenerateTeamValueReportAsync">Generar PDF</button>
+                </div>
+            </div>
         </section>
 
         <section class="panel">

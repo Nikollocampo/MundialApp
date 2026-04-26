@@ -1,0 +1,106 @@
+@page "/ciudades"
+@inject CityService Service
+@inject LookupService LookupService
+@inject SessionState SessionState
+
+<PageTitle>Ciudades</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Ciudades" Subtitle="CRUD de ciudades sede.">
+        <button @onclick="NewItem">Nueva ciudad</button>
+    </SectionHeader>
+
+    <div class="page-grid">
+        <section class="panel panel-form">
+            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+                <div class="form-grid two-columns">
+                    <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                    <div class="full-width">
+                        <label>País</label>
+                        <InputSelect @bind-Value="currentItem.IdPais">
+                            @foreach (var item in paises)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+                <div class="actions-row">
+                    <button type="submit">Guardar</button>
+                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
+                </div>
+            </EditForm>
+        </section>
+
+        <section class="panel panel-table">
+            <table>
+                <thead><tr><th>Ciudad</th><th>País</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>@item.Nombre</td>
+                            <td>@item.Pais</td>
+                            <td class="actions-cell">
+                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                                <button class="danger" @onclick="() => DeleteAsync(item.IdCiudad)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
+}
+
+@code {
+    private List<Ciudad> items = new();
+    private List<LookupItem> paises = new();
+    private Ciudad currentItem = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        paises = await LookupService.GetPaisesAsync();
+        await LoadAsync();
+        SetDefaults();
+    }
+
+    private async Task LoadAsync() => items = await Service.GetAllAsync();
+
+    private async Task SaveAsync()
+    {
+        await Service.SaveAsync(currentItem);
+        await LoadAsync();
+        NewItem();
+    }
+
+    private void Edit(Ciudad item)
+    {
+        currentItem = new Ciudad
+        {
+            IdCiudad = item.IdCiudad,
+            Nombre = item.Nombre,
+            IdPais = item.IdPais
+        };
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        await Service.DeleteAsync(id);
+        await LoadAsync();
+        if (currentItem.IdCiudad == id) NewItem();
+    }
+
+    private void NewItem()
+    {
+        currentItem = new Ciudad();
+        SetDefaults();
+    }
+
+    private void SetDefaults() => currentItem.IdPais = paises.FirstOrDefault()?.Id ?? 0;
+}

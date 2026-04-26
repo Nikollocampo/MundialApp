@@ -1,0 +1,89 @@
+@page "/paises"
+@inject CountryService Service
+@inject SessionState SessionState
+
+<PageTitle>Países</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Países" Subtitle="CRUD de países participantes y anfitriones.">
+        <button @onclick="NewItem">Nuevo país</button>
+    </SectionHeader>
+
+    <div class="page-grid">
+        <section class="panel panel-form">
+            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+                <div class="form-grid two-columns">
+                    <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                    <div><label>MSNM</label><InputNumber @bind-Value="currentItem.Msnm" /></div>
+                    <div class="checkbox-field">
+                        <label><InputCheckbox @bind-Value="currentItem.EsAnfitrion" /> Es anfitrión</label>
+                    </div>
+                </div>
+                <div class="actions-row">
+                    <button type="submit">Guardar</button>
+                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
+                </div>
+            </EditForm>
+        </section>
+
+        <section class="panel panel-table">
+            <table>
+                <thead><tr><th>Nombre</th><th>MSNM</th><th>Anfitrión</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>@item.Nombre</td>
+                            <td>@item.Msnm</td>
+                            <td>@(item.EsAnfitrion ? "Sí" : "No")</td>
+                            <td class="actions-cell">
+                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                                <button class="danger" @onclick="() => DeleteAsync(item.IdPais)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
+}
+
+@code {
+    private List<Pais> items = new();
+    private Pais currentItem = new();
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+    private async Task LoadAsync() => items = await Service.GetAllAsync();
+
+    private async Task SaveAsync()
+    {
+        await Service.SaveAsync(currentItem);
+        await LoadAsync();
+        NewItem();
+    }
+
+    private void Edit(Pais item)
+    {
+        currentItem = new Pais
+        {
+            IdPais = item.IdPais,
+            Nombre = item.Nombre,
+            Msnm = item.Msnm,
+            EsAnfitrion = item.EsAnfitrion
+        };
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        await Service.DeleteAsync(id);
+        await LoadAsync();
+        if (currentItem.IdPais == id) NewItem();
+    }
+
+    private void NewItem() => currentItem = new Pais();
+}

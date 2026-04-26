@@ -34,4 +34,10 @@ public sealed class LookupRepository(IOracleConnectionFactory connectionFactory)
             "SELECT id_estadio, nombre FROM estadio ORDER BY nombre",
             reader => new LookupItem { Id = reader.GetInt32(0), Nombre = reader.GetString(1) },
             cancellationToken: cancellationToken);
+
+    public Task<List<LookupItem>> GetCiudadesAsync(CancellationToken cancellationToken = default)
+        => QueryAsync(
+            "SELECT id_ciudad, nombre FROM ciudad ORDER BY nombre",
+            reader => new LookupItem { Id = reader.GetInt32(0), Nombre = reader.GetString(1) },
+            cancellationToken: cancellationToken);
 }

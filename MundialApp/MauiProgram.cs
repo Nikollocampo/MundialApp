@@ -33,6 +33,12 @@ namespace MundialApp
             builder.Services.AddScoped<PlayerRepository>();
             builder.Services.AddScoped<MatchRepository>();
             builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<ConfederationRepository>();
+            builder.Services.AddScoped<CountryRepository>();
+            builder.Services.AddScoped<CityRepository>();
+            builder.Services.AddScoped<StadiumRepository>();
+            builder.Services.AddScoped<GroupRepository>();
+            builder.Services.AddScoped<CoachRepository>();
             builder.Services.AddScoped<QueryRepository>();
             builder.Services.AddScoped<ReportRepository>();
             builder.Services.AddScoped<AuthService>();
@@ -42,6 +48,12 @@ namespace MundialApp
             builder.Services.AddScoped<PlayerService>();
             builder.Services.AddScoped<MatchService>();
             builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<ConfederationService>();
+            builder.Services.AddScoped<CountryService>();
+            builder.Services.AddScoped<CityService>();
+            builder.Services.AddScoped<StadiumService>();
+            builder.Services.AddScoped<GroupService>();
+            builder.Services.AddScoped<CoachService>();
             builder.Services.AddScoped<QueryService>();
             builder.Services.AddScoped<ReportService>();
 

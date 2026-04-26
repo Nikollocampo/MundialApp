@@ -42,15 +42,21 @@ else
 
         <section class="panel">
             <h3>Partidos por estadio</h3>
-            <label>Estadio</label>
-            <InputSelect @bind-Value="selectedStadiumId">
-                <option value="0">Seleccione</option>
-                @foreach (var estadio in estadios)
-                {
-                    <option value="@estadio.Id">@estadio.Nombre</option>
-                }
-            </InputSelect>
-            <button @onclick="LoadMatchesByStadiumAsync">Consultar</button>
+            <div class="form-grid single-column">
+                <div>
+                    <label>Estadio</label>
+                    <InputSelect @bind-Value="selectedStadiumId">
+                        <option value="0">Seleccione</option>
+                        @foreach (var estadio in estadios)
+                        {
+                            <option value="@estadio.Id">@estadio.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="actions-row">
+                    <button @onclick="LoadMatchesByStadiumAsync">Consultar</button>
+                </div>
+            </div>
             <table>
                 <thead>
                     <tr>

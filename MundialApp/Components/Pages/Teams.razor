@@ -15,74 +15,76 @@ else
         <button @onclick="NewItem">Nuevo equipo</button>
     </SectionHeader>
 
-    <section class="panel">
-        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-            <div class="form-grid two-columns">
-                <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
-                <div><label>Escudo</label><InputText @bind-Value="currentItem.Escudo" /></div>
-                <div>
-                    <label>Grupo</label>
-                    <InputSelect @bind-Value="currentItem.IdGrupo">
-                        @foreach (var item in grupos)
-                        {
-                            <option value="@item.Id">@item.Nombre</option>
-                        }
-                    </InputSelect>
+    <div class="page-grid">
+        <section class="panel panel-form">
+            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+                <div class="form-grid two-columns">
+                    <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                    <div><label>Escudo</label><InputText @bind-Value="currentItem.Escudo" /></div>
+                    <div>
+                        <label>Grupo</label>
+                        <InputSelect @bind-Value="currentItem.IdGrupo">
+                            @foreach (var item in grupos)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div>
+                        <label>País</label>
+                        <InputSelect @bind-Value="currentItem.IdPais">
+                            @foreach (var item in paises)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="full-width">
+                        <label>Confederación</label>
+                        <InputSelect @bind-Value="currentItem.IdConfederacion">
+                            @foreach (var item in confederaciones)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
                 </div>
-                <div>
-                    <label>País</label>
-                    <InputSelect @bind-Value="currentItem.IdPais">
-                        @foreach (var item in paises)
-                        {
-                            <option value="@item.Id">@item.Nombre</option>
-                        }
-                    </InputSelect>
+                <div class="actions-row">
+                    <button type="submit">Guardar</button>
+                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
                 </div>
-                <div class="full-width">
-                    <label>Confederación</label>
-                    <InputSelect @bind-Value="currentItem.IdConfederacion">
-                        @foreach (var item in confederaciones)
-                        {
-                            <option value="@item.Id">@item.Nombre</option>
-                        }
-                    </InputSelect>
-                </div>
-            </div>
-            <div class="actions-row">
-                <button type="submit">Guardar</button>
-                <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-            </div>
-        </EditForm>
-    </section>
+            </EditForm>
+        </section>
 
-    <section class="panel">
-        <table>
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Grupo</th>
-                    <th>País</th>
-                    <th>Confederación</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in items)
-                {
+        <section class="panel panel-table">
+            <table>
+                <thead>
                     <tr>
-                        <td>@item.Nombre</td>
-                        <td>@item.Grupo</td>
-                        <td>@item.Pais</td>
-                        <td>@item.Confederacion</td>
-                        <td class="actions-cell">
-                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                            <button class="danger" @onclick="() => DeleteAsync(item.IdEquipo)">Eliminar</button>
-                        </td>
+                        <th>Nombre</th>
+                        <th>Grupo</th>
+                        <th>País</th>
+                        <th>Confederación</th>
+                        <th></th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </section>
+                </thead>
+                <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>@item.Nombre</td>
+                            <td>@item.Grupo</td>
+                            <td>@item.Pais</td>
+                            <td>@item.Confederacion</td>
+                            <td class="actions-cell">
+                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                                <button class="danger" @onclick="() => DeleteAsync(item.IdEquipo)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
 }
 
 @code {

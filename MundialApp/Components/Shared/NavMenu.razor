@@ -2,7 +2,10 @@
 @inject SessionState SessionState
 
 <nav class="sidebar-nav">
-    <a class="brand" href="/">Mundial 2026</a>
+    <div class="brand-block">
+        <a class="brand" href="/">Mundial 2026</a>
+        <span class="brand-subtitle">Panel de administración</span>
+    </div>
 
     <div class="menu-section">
         <span class="menu-title">General</span>
@@ -14,8 +17,18 @@
     @if (SessionState.CanEditData)
     {
         <div class="menu-section">
-            <span class="menu-title">Gestión</span>
+            <span class="menu-title">Catálogos</span>
+            <NavLink href="/confederaciones">Confederaciones</NavLink>
+            <NavLink href="/paises">Países</NavLink>
+            <NavLink href="/ciudades">Ciudades</NavLink>
+            <NavLink href="/estadios">Estadios</NavLink>
+            <NavLink href="/grupos">Grupos</NavLink>
+        </div>
+
+        <div class="menu-section">
+            <span class="menu-title">Competencia</span>
             <NavLink href="/equipos">Equipos</NavLink>
+            <NavLink href="/directores-tecnicos">Directores técnicos</NavLink>
             <NavLink href="/jugadores">Jugadores</NavLink>
             <NavLink href="/partidos">Partidos</NavLink>
         </div>

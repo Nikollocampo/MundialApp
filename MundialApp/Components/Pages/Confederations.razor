@@ -1,0 +1,95 @@
+@page "/confederaciones"
+@inject ConfederationService Service
+@inject SessionState SessionState
+
+<PageTitle>Confederaciones</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Confederaciones" Subtitle="CRUD de confederaciones del mundial.">
+        <button @onclick="NewItem">Nueva confederación</button>
+    </SectionHeader>
+
+    <div class="page-grid">
+        <section class="panel panel-form">
+            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+                <div class="form-grid two-columns">
+                    <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                    <div><label>Cupos</label><InputNumber @bind-Value="currentItem.CuposMundial" /></div>
+                    <div><label>Fecha creación</label><InputDate @bind-Value="fechaCreacion" /></div>
+                </div>
+                <div class="actions-row">
+                    <button type="submit">Guardar</button>
+                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
+                </div>
+            </EditForm>
+        </section>
+
+        <section class="panel panel-table">
+            <table>
+                <thead><tr><th>Nombre</th><th>Cupos</th><th>Fecha</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>@item.Nombre</td>
+                            <td>@item.CuposMundial</td>
+                            <td>@item.FechaCreacion?.ToString("dd/MM/yyyy")</td>
+                            <td class="actions-cell">
+                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                                <button class="danger" @onclick="() => DeleteAsync(item.IdConfederacion)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
+}
+
+@code {
+    private List<Confederacion> items = new();
+    private Confederacion currentItem = new() { FechaCreacion = DateTime.Today };
+    private DateTime fechaCreacion = DateTime.Today;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync() => items = await Service.GetAllAsync();
+
+    private async Task SaveAsync()
+    {
+        currentItem.FechaCreacion = fechaCreacion;
+        await Service.SaveAsync(currentItem);
+        await LoadAsync();
+        NewItem();
+    }
+
+    private void Edit(Confederacion item)
+    {
+        currentItem = new Confederacion
+        {
+            IdConfederacion = item.IdConfederacion,
+            Nombre = item.Nombre,
+            CuposMundial = item.CuposMundial,
+            FechaCreacion = item.FechaCreacion
+        };
+        fechaCreacion = item.FechaCreacion ?? DateTime.Today;
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        await Service.DeleteAsync(id);
+        await LoadAsync();
+        if (currentItem.IdConfederacion == id) NewItem();
+    }
+
+    private void NewItem()
+    {
+        currentItem = new Confederacion { FechaCreacion = DateTime.Today };
+        fechaCreacion = DateTime.Today;
+    }
+}

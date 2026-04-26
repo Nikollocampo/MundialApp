@@ -15,78 +15,80 @@ else
         <button @onclick="NewItem">Nuevo partido</button>
     </SectionHeader>
 
-    <section class="panel">
-        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-            <div class="form-grid two-columns">
-                <div>
-                    <label>Estadio</label>
-                    <InputSelect @bind-Value="currentItem.IdEstadio">
-                        @foreach (var item in estadios)
-                        {
-                            <option value="@item.Id">@item.Nombre</option>
-                        }
-                    </InputSelect>
+    <div class="page-grid">
+        <section class="panel panel-form">
+            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+                <div class="form-grid two-columns">
+                    <div>
+                        <label>Estadio</label>
+                        <InputSelect @bind-Value="currentItem.IdEstadio">
+                            @foreach (var item in estadios)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div>
+                        <label>Fecha</label>
+                        <InputDate @bind-Value="currentItem.Fecha" />
+                    </div>
+                    <div>
+                        <label>Local</label>
+                        <InputSelect @bind-Value="currentItem.IdLocal">
+                            @foreach (var item in equipos)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div>
+                        <label>Visitante</label>
+                        <InputSelect @bind-Value="currentItem.IdVisitante">
+                            @foreach (var item in equipos)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
                 </div>
-                <div>
-                    <label>Fecha</label>
-                    <InputDate @bind-Value="currentItem.Fecha" />
+                <div class="actions-row">
+                    <button type="submit">Guardar</button>
+                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
                 </div>
-                <div>
-                    <label>Local</label>
-                    <InputSelect @bind-Value="currentItem.IdLocal">
-                        @foreach (var item in equipos)
-                        {
-                            <option value="@item.Id">@item.Nombre</option>
-                        }
-                    </InputSelect>
-                </div>
-                <div>
-                    <label>Visitante</label>
-                    <InputSelect @bind-Value="currentItem.IdVisitante">
-                        @foreach (var item in equipos)
-                        {
-                            <option value="@item.Id">@item.Nombre</option>
-                        }
-                    </InputSelect>
-                </div>
-            </div>
-            <div class="actions-row">
-                <button type="submit">Guardar</button>
-                <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-            </div>
-        </EditForm>
-    </section>
+            </EditForm>
+        </section>
 
-    <section class="panel">
-        <table>
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Partido</th>
-                    <th>Estadio</th>
-                    <th>Ciudad</th>
-                    <th>País</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in items)
-                {
+        <section class="panel panel-table">
+            <table>
+                <thead>
                     <tr>
-                        <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-                        <td>@item.EquipoLocal vs @item.EquipoVisitante</td>
-                        <td>@item.Estadio</td>
-                        <td>@item.Ciudad</td>
-                        <td>@item.Pais</td>
-                        <td class="actions-cell">
-                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                            <button class="danger" @onclick="() => DeleteAsync(item.IdPartido)">Eliminar</button>
-                        </td>
+                        <th>Fecha</th>
+                        <th>Partido</th>
+                        <th>Estadio</th>
+                        <th>Ciudad</th>
+                        <th>País</th>
+                        <th></th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </section>
+                </thead>
+                <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>@item.EquipoLocal vs @item.EquipoVisitante</td>
+                            <td>@item.Estadio</td>
+                            <td>@item.Ciudad</td>
+                            <td>@item.Pais</td>
+                            <td class="actions-cell">
+                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                                <button class="danger" @onclick="() => DeleteAsync(item.IdPartido)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
 }
 
 @code {

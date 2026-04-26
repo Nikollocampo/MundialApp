@@ -10,4 +10,5 @@ public sealed class LookupService(LookupRepository repository)
     public Task<List<LookupItem>> GetConfederacionesAsync(CancellationToken cancellationToken = default) => repository.GetConfederacionesAsync(cancellationToken);
     public Task<List<LookupItem>> GetEquiposAsync(CancellationToken cancellationToken = default) => repository.GetEquiposAsync(cancellationToken);
     public Task<List<LookupItem>> GetEstadiosAsync(CancellationToken cancellationToken = default) => repository.GetEstadiosAsync(cancellationToken);
+    public Task<List<LookupItem>> GetCiudadesAsync(CancellationToken cancellationToken = default) => repository.GetCiudadesAsync(cancellationToken);
 }

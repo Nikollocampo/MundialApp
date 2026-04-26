@@ -1,0 +1,109 @@
+@page "/directores-tecnicos"
+@inject CoachService Service
+@inject LookupService LookupService
+@inject SessionState SessionState
+
+<PageTitle>Directores Técnicos</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Directores técnicos" Subtitle="CRUD de directores técnicos por equipo.">
+        <button @onclick="NewItem">Nuevo director técnico</button>
+    </SectionHeader>
+
+    <div class="page-grid">
+        <section class="panel panel-form">
+            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+                <div class="form-grid two-columns">
+                    <div class="full-width"><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                    <div><label>Nacionalidad</label><InputText @bind-Value="currentItem.Nacionalidad" /></div>
+                    <div>
+                        <label>Equipo</label>
+                        <InputSelect @bind-Value="currentItem.IdEquipo">
+                            @foreach (var item in equipos)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+                <div class="actions-row">
+                    <button type="submit">Guardar</button>
+                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
+                </div>
+            </EditForm>
+        </section>
+
+        <section class="panel panel-table">
+            <table>
+                <thead><tr><th>Nombre</th><th>Nacionalidad</th><th>Equipo</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>@item.Nombre</td>
+                            <td>@item.Nacionalidad</td>
+                            <td>@item.Equipo</td>
+                            <td class="actions-cell">
+                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                                <button class="danger" @onclick="() => DeleteAsync(item.IdDt)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
+}
+
+@code {
+    private List<DirectorTecnico> items = new();
+    private List<LookupItem> equipos = new();
+    private DirectorTecnico currentItem = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        equipos = await LookupService.GetEquiposAsync();
+        await LoadAsync();
+        SetDefaults();
+    }
+
+    private async Task LoadAsync() => items = await Service.GetAllAsync();
+
+    private async Task SaveAsync()
+    {
+        await Service.SaveAsync(currentItem);
+        await LoadAsync();
+        NewItem();
+    }
+
+    private void Edit(DirectorTecnico item)
+    {
+        currentItem = new DirectorTecnico
+        {
+            IdDt = item.IdDt,
+            Nombre = item.Nombre,
+            Nacionalidad = item.Nacionalidad,
+            IdEquipo = item.IdEquipo
+        };
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        await Service.DeleteAsync(id);
+        await LoadAsync();
+        if (currentItem.IdDt == id) NewItem();
+    }
+
+    private void NewItem()
+    {
+        currentItem = new DirectorTecnico();
+        SetDefaults();
+    }
+
+    private void SetDefaults() => currentItem.IdEquipo = equipos.FirstOrDefault()?.Id ?? 0;
+}

@@ -59,6 +59,7 @@ public sealed class DirectorTecnico
     public string Nombre { get; set; } = string.Empty;
     public string? Nacionalidad { get; set; }
     public int IdEquipo { get; set; }
+    public string? Equipo { get; set; }
 }
 
 public sealed class Jugador
