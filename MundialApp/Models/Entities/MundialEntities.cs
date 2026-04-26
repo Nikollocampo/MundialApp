@@ -45,6 +45,7 @@ public sealed class Equipo
     public int IdEquipo { get; set; }
     public string Nombre { get; set; } = string.Empty;
     public string? Escudo { get; set; }
+    public string? EscudoPreview { get; set; }
     public int IdGrupo { get; set; }
     public int IdPais { get; set; }
     public int IdConfederacion { get; set; }

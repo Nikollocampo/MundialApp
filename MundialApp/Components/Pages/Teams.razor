@@ -33,9 +33,9 @@ else
                 {
                     <tr>
                         <td>
-                            @if (!string.IsNullOrWhiteSpace(item.Escudo))
+                            @if (!string.IsNullOrWhiteSpace(item.EscudoPreview))
                             {
-                                <img class="table-image" src="@item.Escudo" alt="Escudo de @item.Nombre" />
+                                <img class="table-image" src="@item.EscudoPreview" alt="Escudo de @item.Nombre" />
                             }
                             else
                             {
@@ -94,10 +94,10 @@ else
                     <label>Escudo</label>
                     <InputFile OnChange="OnShieldSelectedAsync" accept="image/*" />
                 </div>
-                @if (!string.IsNullOrWhiteSpace(currentItem.Escudo))
+                @if (!string.IsNullOrWhiteSpace(currentItem.EscudoPreview))
                 {
                     <div class="full-width image-preview-card">
-                        <img class="image-preview" src="@currentItem.Escudo" alt="Vista previa del escudo" />
+                        <img class="image-preview" src="@currentItem.EscudoPreview" alt="Vista previa del escudo" />
                     </div>
                 }
             </div>
@@ -127,7 +127,14 @@ else
         SetDefaults();
     }
 
-    private async Task LoadAsync() => items = await TeamService.GetAllAsync();
+    private async Task LoadAsync()
+    {
+        items = await TeamService.GetAllAsync();
+        foreach (var item in items)
+        {
+            item.EscudoPreview = await ImageStorageService.GetImageSourceAsync(item.Escudo);
+        }
+    }
 
     private async Task SaveAsync()
     {
@@ -148,6 +155,7 @@ else
             IdEquipo = item.IdEquipo,
             Nombre = item.Nombre,
             Escudo = item.Escudo,
+            EscudoPreview = item.EscudoPreview,
             IdGrupo = item.IdGrupo,
             IdPais = item.IdPais,
             IdConfederacion = item.IdConfederacion
@@ -205,6 +213,7 @@ else
             return;
         }
 
+        currentItem.EscudoPreview = await ImageStorageService.CreatePreviewAsync(file);
         currentItem.Escudo = await ImageStorageService.SaveImageAsync(file, "escudos");
     }
 
