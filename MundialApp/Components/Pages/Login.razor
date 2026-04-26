@@ -1,0 +1,57 @@
+@page "/login"
+@inject AuthService AuthService
+@inject SessionState SessionState
+@inject NavigationManager NavigationManager
+
+<PageTitle>Login</PageTitle>
+
+<section class="login-page">
+    <EditForm Model="request" OnValidSubmit="LoginAsync" class="login-card">
+        <DataAnnotationsValidator />
+        <SectionHeader Title="Ingreso al sistema" Subtitle="Acceda con cédula o correo y su contraseña." />
+
+        <div class="form-grid single-column">
+            <div>
+                <label>Usuario</label>
+                <InputText @bind-Value="request.Identificador" />
+            </div>
+            <div>
+                <label>Contraseña</label>
+                <InputText @bind-Value="request.Contrasena" type="password" />
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <p class="status-message @(isError ? "error" : "success")">@message</p>
+        }
+
+        <button type="submit">Iniciar sesión</button>
+    </EditForm>
+</section>
+
+@code {
+    private readonly Models.Dto.LoginRequest request = new();
+    private string? message;
+    private bool isError;
+
+    protected override void OnInitialized()
+    {
+        if (SessionState.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        var result = await AuthService.LoginAsync(request);
+        message = result.Message;
+        isError = !result.Success;
+
+        if (result.Success)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

@@ -1,0 +1,150 @@
+@page "/consultas"
+@inject QueryService QueryService
+@inject LookupService LookupService
+@inject SessionState SessionState
+
+<PageTitle>Consultas</PageTitle>
+
+@if (!SessionState.CanQuery)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Consultas" Subtitle="Consultas solicitadas en el enunciado." />
+
+    <div class="content-grid two-columns">
+        <section class="panel">
+            <h3>Jugador más costoso por confederación</h3>
+            <button @onclick="LoadMostExpensivePlayersAsync">Consultar</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Confederación</th>
+                        <th>Jugador</th>
+                        <th>Equipo</th>
+                        <th>Costo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in expensivePlayers)
+                    {
+                        <tr>
+                            <td>@item.Confederacion</td>
+                            <td>@item.Jugador</td>
+                            <td>@item.Equipo</td>
+                            <td>@item.Costo.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+
+        <section class="panel">
+            <h3>Partidos por estadio</h3>
+            <label>Estadio</label>
+            <InputSelect @bind-Value="selectedStadiumId">
+                <option value="0">Seleccione</option>
+                @foreach (var estadio in estadios)
+                {
+                    <option value="@estadio.Id">@estadio.Nombre</option>
+                }
+            </InputSelect>
+            <button @onclick="LoadMatchesByStadiumAsync">Consultar</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Local</th>
+                        <th>Visitante</th>
+                        <th>Ciudad</th>
+                        <th>País</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in stadiumMatches)
+                    {
+                        <tr>
+                            <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@item.EquipoLocal</td>
+                            <td>@item.EquipoVisitante</td>
+                            <td>@item.Ciudad</td>
+                            <td>@item.Pais</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+
+        <section class="panel">
+            <h3>Equipo más costoso por país anfitrión</h3>
+            <button @onclick="LoadMostExpensiveTeamsAsync">Consultar</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>País anfitrión</th>
+                        <th>Equipo</th>
+                        <th>Valor total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in expensiveTeams)
+                    {
+                        <tr>
+                            <td>@item.PaisAnfitrion</td>
+                            <td>@item.Equipo</td>
+                            <td>@item.ValorTotal.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+
+        <section class="panel">
+            <h3>Jugadores menores de 21 por equipo</h3>
+            <button @onclick="LoadYoungPlayersAsync">Consultar</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Equipo</th>
+                        <th>Cantidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in youngPlayers)
+                    {
+                        <tr>
+                            <td>@item.Equipo</td>
+                            <td>@item.CantidadMenoresDe21</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
+}
+
+@code {
+    private List<Models.Dto.JugadorCostosoPorConfederacionDto> expensivePlayers = new();
+    private List<Models.Dto.PartidoPorEstadioDto> stadiumMatches = new();
+    private List<Models.Dto.EquipoCostosoPorPaisAnfitrionDto> expensiveTeams = new();
+    private List<Models.Dto.CantidadJugadoresJovenesDto> youngPlayers = new();
+    private List<Models.Entities.LookupItem> estadios = new();
+    private int selectedStadiumId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        estadios = await LookupService.GetEstadiosAsync();
+    }
+
+    private async Task LoadMostExpensivePlayersAsync() => expensivePlayers = await QueryService.GetMostExpensivePlayerByConfederationAsync();
+    private async Task LoadMatchesByStadiumAsync()
+    {
+        if (selectedStadiumId > 0)
+        {
+            stadiumMatches = await QueryService.GetMatchesByStadiumAsync(selectedStadiumId);
+        }
+    }
+    private async Task LoadMostExpensiveTeamsAsync() => expensiveTeams = await QueryService.GetMostExpensiveTeamByHostCountryAsync();
+    private async Task LoadYoungPlayersAsync() => youngPlayers = await QueryService.GetYoungPlayersCountByTeamAsync();
+}

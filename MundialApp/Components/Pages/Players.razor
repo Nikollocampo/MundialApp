@@ -1,0 +1,134 @@
+@page "/jugadores"
+@inject PlayerService PlayerService
+@inject LookupService LookupService
+@inject SessionState SessionState
+
+<PageTitle>Jugadores</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Gestión de jugadores" Subtitle="CRUD de jugadores por equipo.">
+        <button @onclick="NewItem">Nuevo jugador</button>
+    </SectionHeader>
+
+    <section class="panel">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div>
+                    <label>Equipo</label>
+                    <InputSelect @bind-Value="currentItem.IdEquipo">
+                        @foreach (var item in equipos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div><label>Posición</label><InputText @bind-Value="currentItem.Posicion" /></div>
+                <div><label>Fecha nacimiento</label><InputDate @bind-Value="currentItem.FechaNacimiento" /></div>
+                <div><label>Edad</label><InputNumber @bind-Value="currentItem.Edad" /></div>
+                <div><label>Costo</label><InputNumber @bind-Value="currentItem.Costo" /></div>
+                <div><label>Peso</label><InputNumber @bind-Value="currentItem.Peso" /></div>
+                <div><label>Altura</label><InputNumber @bind-Value="currentItem.Altura" /></div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
+            </div>
+        </EditForm>
+    </section>
+
+    <section class="panel">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Equipo</th>
+                    <th>Posición</th>
+                    <th>Edad</th>
+                    <th>Costo</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>@item.Equipo</td>
+                        <td>@item.Posicion</td>
+                        <td>@item.Edad</td>
+                        <td>@item.Costo.ToString("C")</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdJugador)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private List<Models.Entities.Jugador> items = new();
+    private Models.Entities.Jugador currentItem = new() { FechaNacimiento = DateTime.Today.AddYears(-20) };
+    private List<Models.Entities.LookupItem> equipos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        equipos = await LookupService.GetEquiposAsync();
+        await LoadAsync();
+        SetDefaults();
+    }
+
+    private async Task LoadAsync() => items = await PlayerService.GetAllAsync();
+
+    private async Task SaveAsync()
+    {
+        await PlayerService.SaveAsync(currentItem);
+        await LoadAsync();
+        NewItem();
+    }
+
+    private void Edit(Models.Entities.Jugador item)
+    {
+        currentItem = new Models.Entities.Jugador
+        {
+            IdJugador = item.IdJugador,
+            Nombre = item.Nombre,
+            IdEquipo = item.IdEquipo,
+            Posicion = item.Posicion,
+            FechaNacimiento = item.FechaNacimiento,
+            Edad = item.Edad,
+            Costo = item.Costo,
+            Peso = item.Peso,
+            Altura = item.Altura
+        };
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        await PlayerService.DeleteAsync(id);
+        await LoadAsync();
+        if (currentItem.IdJugador == id)
+        {
+            NewItem();
+        }
+    }
+
+    private void NewItem()
+    {
+        currentItem = new Models.Entities.Jugador { FechaNacimiento = DateTime.Today.AddYears(-20) };
+        SetDefaults();
+    }
+
+    private void SetDefaults()
+    {
+        currentItem.IdEquipo = equipos.FirstOrDefault()?.Id ?? 0;
+    }
+}

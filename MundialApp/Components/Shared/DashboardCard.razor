@@ -1,0 +1,9 @@
+<article class="dashboard-card">
+    <span class="dashboard-card__title">@Title</span>
+    <strong class="dashboard-card__value">@Value</strong>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Value { get; set; } = string.Empty;
+}

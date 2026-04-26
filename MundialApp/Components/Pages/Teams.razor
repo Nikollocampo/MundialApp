@@ -1,0 +1,148 @@
+@page "/equipos"
+@inject TeamService TeamService
+@inject LookupService LookupService
+@inject SessionState SessionState
+
+<PageTitle>Equipos</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Gestión de equipos" Subtitle="CRUD de equipos participantes.">
+        <button @onclick="NewItem">Nuevo equipo</button>
+    </SectionHeader>
+
+    <section class="panel">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div><label>Escudo</label><InputText @bind-Value="currentItem.Escudo" /></div>
+                <div>
+                    <label>Grupo</label>
+                    <InputSelect @bind-Value="currentItem.IdGrupo">
+                        @foreach (var item in grupos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>País</label>
+                    <InputSelect @bind-Value="currentItem.IdPais">
+                        @foreach (var item in paises)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="full-width">
+                    <label>Confederación</label>
+                    <InputSelect @bind-Value="currentItem.IdConfederacion">
+                        @foreach (var item in confederaciones)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
+            </div>
+        </EditForm>
+    </section>
+
+    <section class="panel">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Grupo</th>
+                    <th>País</th>
+                    <th>Confederación</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>@item.Grupo</td>
+                        <td>@item.Pais</td>
+                        <td>@item.Confederacion</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdEquipo)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private List<Models.Entities.Equipo> items = new();
+    private Models.Entities.Equipo currentItem = new();
+    private List<Models.Entities.LookupItem> grupos = new();
+    private List<Models.Entities.LookupItem> paises = new();
+    private List<Models.Entities.LookupItem> confederaciones = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        grupos = await LookupService.GetGruposAsync();
+        paises = await LookupService.GetPaisesAsync();
+        confederaciones = await LookupService.GetConfederacionesAsync();
+        await LoadAsync();
+        SetDefaults();
+    }
+
+    private async Task LoadAsync() => items = await TeamService.GetAllAsync();
+
+    private async Task SaveAsync()
+    {
+        await TeamService.SaveAsync(currentItem);
+        await LoadAsync();
+        NewItem();
+    }
+
+    private void Edit(Models.Entities.Equipo item)
+    {
+        currentItem = new Models.Entities.Equipo
+        {
+            IdEquipo = item.IdEquipo,
+            Nombre = item.Nombre,
+            Escudo = item.Escudo,
+            IdGrupo = item.IdGrupo,
+            IdPais = item.IdPais,
+            IdConfederacion = item.IdConfederacion
+        };
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        await TeamService.DeleteAsync(id);
+        await LoadAsync();
+        if (currentItem.IdEquipo == id)
+        {
+            NewItem();
+        }
+    }
+
+    private void NewItem()
+    {
+        currentItem = new Models.Entities.Equipo();
+        SetDefaults();
+    }
+
+    private void SetDefaults()
+    {
+        currentItem.IdGrupo = grupos.FirstOrDefault()?.Id ?? 0;
+        currentItem.IdPais = paises.FirstOrDefault()?.Id ?? 0;
+        currentItem.IdConfederacion = confederaciones.FirstOrDefault()?.Id ?? 0;
+    }
+}

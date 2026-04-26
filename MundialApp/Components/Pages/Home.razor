@@ -1,5 +1,109 @@
 ﻿@page "/"
+@implements IDisposable
+@inject DashboardService DashboardService
+@inject SessionState SessionState
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
 
-<h1>Hello, world!</h1>
+<PageTitle>Dashboard</PageTitle>
 
-Welcome to your new app.
+@if (!SessionState.IsAuthenticated)
+{
+    <Login />
+}
+else
+{
+    <SectionHeader Title="Dashboard" Subtitle="Resumen general del mundial 2026.">
+        <button class="secondary" @onclick="LogoutAsync">Cerrar sesión</button>
+    </SectionHeader>
+
+    @if (summary is null)
+    {
+        <p>Cargando información...</p>
+    }
+    else
+    {
+        <section class="dashboard-grid">
+            <DashboardCard Title="Equipos" Value="@summary.TotalEquipos.ToString()" />
+            <DashboardCard Title="Jugadores" Value="@summary.TotalJugadores.ToString()" />
+            <DashboardCard Title="Partidos" Value="@summary.TotalPartidos.ToString()" />
+            <DashboardCard Title="Estadios" Value="@summary.TotalEstadios.ToString()" />
+            <DashboardCard Title="Usuarios" Value="@summary.TotalUsuarios.ToString()" />
+            <DashboardCard Title="Rol actual" Value="@SessionState.CurrentUser!.Rol" />
+        </section>
+
+        <div class="content-grid two-columns">
+            <section class="panel">
+                <h3>Países anfitriones</h3>
+                <ul class="host-list">
+                    @foreach (var host in summary.PaisesAnfitriones)
+                    {
+                        <li>@host</li>
+                    }
+                </ul>
+            </section>
+
+            <section class="panel">
+                <h3>Próximos partidos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Partido</th>
+                            <th>Estadio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var partido in summary.ProximosPartidos)
+                        {
+                            <tr>
+                                <td>@partido.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@partido.EquipoLocal vs @partido.EquipoVisitante</td>
+                                <td>@partido.Estadio - @partido.Ciudad</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    }
+}
+
+@code {
+    private Models.Dto.DashboardSummary? summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        SessionState.Changed += OnSessionChanged;
+
+        if (SessionState.IsAuthenticated)
+        {
+            summary = await DashboardService.GetSummaryAsync();
+        }
+    }
+
+    private async void OnSessionChanged()
+    {
+        if (SessionState.IsAuthenticated)
+        {
+            summary = await DashboardService.GetSummaryAsync();
+        }
+        else
+        {
+            summary = null;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+        NavigationManager.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        SessionState.Changed -= OnSessionChanged;
+    }
+}

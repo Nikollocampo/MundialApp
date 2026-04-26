@@ -1,0 +1,31 @@
+.app-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    background: #f3f6fb;
+}
+
+.sidebar {
+    background: linear-gradient(180deg, #0f172a 0%, #1e3a8a 100%);
+    color: #fff;
+    padding: 1.5rem 1rem;
+}
+
+.main-content {
+    padding: 2rem;
+}
+
+.main-content--full {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+    .app-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .main-content,
+    .sidebar {
+        padding: 1rem;
+    }
+}

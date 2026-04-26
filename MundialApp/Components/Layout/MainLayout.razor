@@ -1,3 +1,30 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+@inject SessionState SessionState
+
+<div class="app-shell">
+    @if (SessionState.IsAuthenticated)
+    {
+        <aside class="sidebar">
+            <NavMenu />
+        </aside>
+    }
+
+    <main class="main-content @(SessionState.IsAuthenticated ? string.Empty : "main-content--full")">
+        @Body
+    </main>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        SessionState.Changed += OnSessionChanged;
+    }
+
+    private void OnSessionChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        SessionState.Changed -= OnSessionChanged;
+    }
+}

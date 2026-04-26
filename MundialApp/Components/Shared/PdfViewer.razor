@@ -1,0 +1,34 @@
+@implements IDisposable
+@inject PdfViewerService PdfViewerService
+
+@if (PdfViewerService.HasDocument)
+{
+    <section class="pdf-panel">
+        <div class="pdf-panel__header">
+            <div>
+                <h3>@PdfViewerService.CurrentDocumentName</h3>
+                <span>Vista previa dentro de la aplicación</span>
+            </div>
+            <button class="secondary" @onclick="Close">Cerrar</button>
+        </div>
+        <iframe class="pdf-frame" src="@PdfSource"></iframe>
+    </section>
+}
+
+@code {
+    private string PdfSource => $"data:application/pdf;base64,{PdfViewerService.CurrentDocumentBase64}";
+
+    protected override void OnInitialized()
+    {
+        PdfViewerService.Changed += OnChanged;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private void Close() => PdfViewerService.Clear();
+
+    public void Dispose()
+    {
+        PdfViewerService.Changed -= OnChanged;
+    }
+}

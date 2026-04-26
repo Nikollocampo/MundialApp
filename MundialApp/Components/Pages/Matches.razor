@@ -1,0 +1,154 @@
+@page "/partidos"
+@inject MatchService MatchService
+@inject LookupService LookupService
+@inject SessionState SessionState
+
+<PageTitle>Partidos</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Gestión de partidos" Subtitle="Partidos de la fase de grupos.">
+        <button @onclick="NewItem">Nuevo partido</button>
+    </SectionHeader>
+
+    <section class="panel">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div>
+                    <label>Estadio</label>
+                    <InputSelect @bind-Value="currentItem.IdEstadio">
+                        @foreach (var item in estadios)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>Fecha</label>
+                    <InputDate @bind-Value="currentItem.Fecha" />
+                </div>
+                <div>
+                    <label>Local</label>
+                    <InputSelect @bind-Value="currentItem.IdLocal">
+                        @foreach (var item in equipos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>Visitante</label>
+                    <InputSelect @bind-Value="currentItem.IdVisitante">
+                        @foreach (var item in equipos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
+            </div>
+        </EditForm>
+    </section>
+
+    <section class="panel">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Partido</th>
+                    <th>Estadio</th>
+                    <th>Ciudad</th>
+                    <th>País</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@item.EquipoLocal vs @item.EquipoVisitante</td>
+                        <td>@item.Estadio</td>
+                        <td>@item.Ciudad</td>
+                        <td>@item.Pais</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdPartido)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private List<Models.Entities.Partido> items = new();
+    private Models.Entities.Partido currentItem = new() { Fecha = DateTime.Today.AddDays(1) };
+    private List<Models.Entities.LookupItem> estadios = new();
+    private List<Models.Entities.LookupItem> equipos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        estadios = await LookupService.GetEstadiosAsync();
+        equipos = await LookupService.GetEquiposAsync();
+        await LoadAsync();
+        SetDefaults();
+    }
+
+    private async Task LoadAsync() => items = await MatchService.GetAllAsync();
+
+    private async Task SaveAsync()
+    {
+        if (currentItem.IdLocal == currentItem.IdVisitante)
+        {
+            return;
+        }
+
+        await MatchService.SaveAsync(currentItem);
+        await LoadAsync();
+        NewItem();
+    }
+
+    private void Edit(Models.Entities.Partido item)
+    {
+        currentItem = new Models.Entities.Partido
+        {
+            IdPartido = item.IdPartido,
+            IdEstadio = item.IdEstadio,
+            Fecha = item.Fecha,
+            IdLocal = item.IdLocal,
+            IdVisitante = item.IdVisitante
+        };
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        await MatchService.DeleteAsync(id);
+        await LoadAsync();
+        if (currentItem.IdPartido == id)
+        {
+            NewItem();
+        }
+    }
+
+    private void NewItem()
+    {
+        currentItem = new Models.Entities.Partido { Fecha = DateTime.Today.AddDays(1) };
+        SetDefaults();
+    }
+
+    private void SetDefaults()
+    {
+        currentItem.IdEstadio = estadios.FirstOrDefault()?.Id ?? 0;
+        currentItem.IdLocal = equipos.FirstOrDefault()?.Id ?? 0;
+        currentItem.IdVisitante = equipos.Skip(1).FirstOrDefault()?.Id ?? currentItem.IdLocal;
+    }
+}

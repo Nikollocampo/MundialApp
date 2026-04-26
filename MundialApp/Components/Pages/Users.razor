@@ -1,0 +1,113 @@
+@page "/usuarios"
+@inject UserService UserService
+@inject SessionState SessionState
+
+<PageTitle>Usuarios</PageTitle>
+
+@if (!SessionState.CanManageUsers)
+{
+    <AccessDenied Message="Solo el administrador puede gestionar usuarios." />
+}
+else
+{
+    <SectionHeader Title="Gestión de usuarios" Subtitle="Solo el administrador puede crear nuevos usuarios.">
+        <button @onclick="NewItem">Nuevo usuario</button>
+    </SectionHeader>
+
+    <section class="panel">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div><label>Cédula</label><InputText @bind-Value="currentItem.Cedula" /></div>
+                <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div><label>Correo</label><InputText @bind-Value="currentItem.Correo" /></div>
+                <div><label>Teléfono</label><InputText @bind-Value="currentItem.Telefono" /></div>
+                <div><label>Contraseña</label><InputText @bind-Value="currentItem.Contrasena" /></div>
+                <div>
+                    <label>Rol</label>
+                    <InputSelect @bind-Value="currentItem.Rol">
+                        <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                        <option value="TRADICIONAL">TRADICIONAL</option>
+                        <option value="ESPORADICO">ESPORADICO</option>
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
+            </div>
+        </EditForm>
+    </section>
+
+    <section class="panel">
+        <table>
+            <thead>
+                <tr>
+                    <th>Cédula</th>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Cedula</td>
+                        <td>@item.Nombre</td>
+                        <td>@item.Correo</td>
+                        <td>@item.Rol</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.Cedula)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private List<Models.Entities.Usuario> items = new();
+    private Models.Entities.Usuario currentItem = new() { Rol = "TRADICIONAL" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync() => items = await UserService.GetAllAsync();
+
+    private async Task SaveAsync()
+    {
+        await UserService.SaveAsync(currentItem);
+        await LoadAsync();
+        NewItem();
+    }
+
+    private void Edit(Models.Entities.Usuario item)
+    {
+        currentItem = new Models.Entities.Usuario
+        {
+            Cedula = item.Cedula,
+            Nombre = item.Nombre,
+            Correo = item.Correo,
+            Telefono = item.Telefono,
+            Contrasena = item.Contrasena,
+            Rol = item.Rol
+        };
+    }
+
+    private async Task DeleteAsync(string cedula)
+    {
+        await UserService.DeleteAsync(cedula);
+        await LoadAsync();
+        if (currentItem.Cedula == cedula)
+        {
+            NewItem();
+        }
+    }
+
+    private void NewItem() => currentItem = new Models.Entities.Usuario { Rol = "TRADICIONAL" };
+}

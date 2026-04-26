@@ -1,4 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
+using MundialApp.Configuration;
+using MundialApp.Repositories;
+using MundialApp.Repositories.Infrastructure;
+using MundialApp.Services;
 
 namespace MundialApp
 {
@@ -14,7 +18,32 @@ namespace MundialApp
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
+            builder.Services.Configure<OracleOptions>(options =>
+            {
+                options.ConnectionString = "User Id=mundial;Password=1234;Data Source=localhost:1521/XEPDB1;";
+            });
             builder.Services.AddMauiBlazorWebView();
+            builder.Services.AddSingleton<SessionState>();
+            builder.Services.AddSingleton<PdfViewerService>();
+            builder.Services.AddSingleton<IOracleConnectionFactory, OracleConnectionFactory>();
+            builder.Services.AddScoped<AuthRepository>();
+            builder.Services.AddScoped<LookupRepository>();
+            builder.Services.AddScoped<DashboardRepository>();
+            builder.Services.AddScoped<TeamRepository>();
+            builder.Services.AddScoped<PlayerRepository>();
+            builder.Services.AddScoped<MatchRepository>();
+            builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<QueryRepository>();
+            builder.Services.AddScoped<ReportRepository>();
+            builder.Services.AddScoped<AuthService>();
+            builder.Services.AddScoped<LookupService>();
+            builder.Services.AddScoped<DashboardService>();
+            builder.Services.AddScoped<TeamService>();
+            builder.Services.AddScoped<PlayerService>();
+            builder.Services.AddScoped<MatchService>();
+            builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<QueryService>();
+            builder.Services.AddScoped<ReportService>();
 
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();

@@ -1,0 +1,45 @@
+@implements IDisposable
+@inject SessionState SessionState
+
+<nav class="sidebar-nav">
+    <a class="brand" href="/">Mundial 2026</a>
+
+    <div class="menu-section">
+        <span class="menu-title">General</span>
+        <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
+        <NavLink href="/consultas">Consultas</NavLink>
+        <NavLink href="/reportes">Reportes</NavLink>
+    </div>
+
+    @if (SessionState.CanEditData)
+    {
+        <div class="menu-section">
+            <span class="menu-title">Gestión</span>
+            <NavLink href="/equipos">Equipos</NavLink>
+            <NavLink href="/jugadores">Jugadores</NavLink>
+            <NavLink href="/partidos">Partidos</NavLink>
+        </div>
+    }
+
+    @if (SessionState.CanManageUsers)
+    {
+        <div class="menu-section">
+            <span class="menu-title">Seguridad</span>
+            <NavLink href="/usuarios">Usuarios</NavLink>
+        </div>
+    }
+</nav>
+
+@code {
+    protected override void OnInitialized()
+    {
+        SessionState.Changed += OnSessionChanged;
+    }
+
+    private void OnSessionChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        SessionState.Changed -= OnSessionChanged;
+    }
+}

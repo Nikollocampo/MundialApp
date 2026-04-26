@@ -1,0 +1,122 @@
+@page "/reportes"
+@inject LookupService LookupService
+@inject ReportService ReportService
+@inject PdfViewerService PdfViewerService
+@inject SessionState SessionState
+
+<PageTitle>Reportes</PageTitle>
+
+@if (!SessionState.CanQuery)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Reportes" Subtitle="Los PDF se abren dentro de la misma aplicación." />
+
+    <div class="content-grid two-columns">
+        <section class="panel">
+            <h3>Bitácora por fecha y hora</h3>
+            <div class="form-grid two-columns">
+                <div>
+                    <label>Desde</label>
+                    <InputDate @bind-Value="desdeBitacora" />
+                </div>
+                <div>
+                    <label>Hasta</label>
+                    <InputDate @bind-Value="hastaBitacora" />
+                </div>
+            </div>
+            <button @onclick="GenerateBitacoraReportAsync">Generar PDF</button>
+        </section>
+
+        <section class="panel">
+            <h3>Jugadores por filtros</h3>
+            <div class="form-grid two-columns">
+                <div><label>Peso mínimo</label><InputNumber @bind-Value="pesoMin" /></div>
+                <div><label>Peso máximo</label><InputNumber @bind-Value="pesoMax" /></div>
+                <div><label>Altura mínima</label><InputNumber @bind-Value="alturaMin" /></div>
+                <div><label>Altura máxima</label><InputNumber @bind-Value="alturaMax" /></div>
+                <div class="full-width">
+                    <label>Equipo</label>
+                    <InputSelect @bind-Value="selectedEquipoId">
+                        <option value="">Todos</option>
+                        @foreach (var equipo in equipos)
+                        {
+                            <option value="@equipo.Id">@equipo.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <button @onclick="GeneratePlayersReportAsync">Generar PDF</button>
+        </section>
+
+        <section class="panel">
+            <h3>Valor total por equipo y confederación</h3>
+            <label>Confederación</label>
+            <InputSelect @bind-Value="selectedConfederacionId">
+                <option value="0">Seleccione</option>
+                @foreach (var confederacion in confederaciones)
+                {
+                    <option value="@confederacion.Id">@confederacion.Nombre</option>
+                }
+            </InputSelect>
+            <button @onclick="GenerateTeamValueReportAsync">Generar PDF</button>
+        </section>
+
+        <section class="panel">
+            <h3>Países que jugarán en cada sede</h3>
+            <button @onclick="GenerateCountriesByHostReportAsync">Generar PDF</button>
+        </section>
+    </div>
+
+    <PdfViewer />
+}
+
+@code {
+    private DateTime desdeBitacora = DateTime.Today.AddDays(-7);
+    private DateTime hastaBitacora = DateTime.Today;
+    private decimal? pesoMin;
+    private decimal? pesoMax;
+    private decimal? alturaMin;
+    private decimal? alturaMax;
+    private int? selectedEquipoId;
+    private int selectedConfederacionId;
+    private List<Models.Entities.LookupItem> equipos = new();
+    private List<Models.Entities.LookupItem> confederaciones = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        equipos = await LookupService.GetEquiposAsync();
+        confederaciones = await LookupService.GetConfederacionesAsync();
+    }
+
+    private async Task GenerateBitacoraReportAsync()
+    {
+        var data = await ReportService.GetBitacoraAsync(desdeBitacora, hastaBitacora.AddDays(1).AddTicks(-1));
+        PdfViewerService.Show("bitacora.pdf", ReportService.BuildBitacoraPdf(data, desdeBitacora, hastaBitacora));
+    }
+
+    private async Task GeneratePlayersReportAsync()
+    {
+        var data = await ReportService.GetPlayersAsync(pesoMin, pesoMax, alturaMin, alturaMax, selectedEquipoId);
+        PdfViewerService.Show("jugadores.pdf", ReportService.BuildJugadoresPdf(data));
+    }
+
+    private async Task GenerateTeamValueReportAsync()
+    {
+        if (selectedConfederacionId == 0)
+        {
+            return;
+        }
+
+        var data = await ReportService.GetTeamValuesAsync(selectedConfederacionId);
+        PdfViewerService.Show("valor-equipos.pdf", ReportService.BuildValorEquiposPdf(data));
+    }
+
+    private async Task GenerateCountriesByHostReportAsync()
+    {
+        var data = await ReportService.GetCountriesByHostAsync();
+        PdfViewerService.Show("paises-sedes.pdf", ReportService.BuildPaisesPorSedePdf(data));
+    }
+}

@@ -1,0 +1,8 @@
+<section class="empty-state">
+    <h3>Acceso restringido</h3>
+    <p>@Message</p>
+</section>
+
+@code {
+    [Parameter] public string Message { get; set; } = "No tiene permisos para acceder a esta opción.";
+}
