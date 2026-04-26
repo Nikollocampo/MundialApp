@@ -50,6 +50,8 @@ else
 @code {
     private List<Grupo> items = new();
     private Grupo currentItem = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nuevo grupo";
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
     private async Task LoadAsync() => items = await Service.GetAllAsync();
@@ -58,10 +60,15 @@ else
     {
         await Service.SaveAsync(currentItem);
         await LoadAsync();
-        NewItem();
+        CloseModal();
     }
 
-    private void Edit(Grupo item) => currentItem = new Grupo { IdGrupo = item.IdGrupo, Nombre = item.Nombre };
+    private void Edit(Grupo item)
+    {
+        currentItem = new Grupo { IdGrupo = item.IdGrupo, Nombre = item.Nombre };
+        modalTitle = "Editar grupo";
+        isModalOpen = true;
+    }
 
     private async Task DeleteAsync(int id)
     {
@@ -71,4 +78,17 @@ else
     }
 
     private void NewItem() => currentItem = new Grupo();
+
+    private void OpenNewModal()
+    {
+        NewItem();
+        modalTitle = "Nuevo grupo";
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        NewItem();
+    }
 }

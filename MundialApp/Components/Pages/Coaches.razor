@@ -64,6 +64,8 @@ else
     private List<DirectorTecnico> items = new();
     private List<LookupItem> equipos = new();
     private DirectorTecnico currentItem = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nuevo director técnico";
 
     protected override async Task OnInitializedAsync()
     {
@@ -78,7 +80,7 @@ else
     {
         await Service.SaveAsync(currentItem);
         await LoadAsync();
-        NewItem();
+        CloseModal();
     }
 
     private void Edit(DirectorTecnico item)
@@ -90,6 +92,9 @@ else
             Nacionalidad = item.Nacionalidad,
             IdEquipo = item.IdEquipo
         };
+
+        modalTitle = "Editar director técnico";
+        isModalOpen = true;
     }
 
     private async Task DeleteAsync(int id)
@@ -103,6 +108,19 @@ else
     {
         currentItem = new DirectorTecnico();
         SetDefaults();
+    }
+
+    private void OpenNewModal()
+    {
+        NewItem();
+        modalTitle = "Nuevo director técnico";
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        NewItem();
     }
 
     private void SetDefaults() => currentItem.IdEquipo = equipos.FirstOrDefault()?.Id ?? 0;

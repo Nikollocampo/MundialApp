@@ -2,6 +2,7 @@
 @inject TeamService TeamService
 @inject LookupService LookupService
 @inject SessionState SessionState
+@inject ImageStorageService ImageStorageService
 
 <PageTitle>Equipos</PageTitle>
 
@@ -12,79 +13,97 @@
 else
 {
     <SectionHeader Title="Gestión de equipos" Subtitle="CRUD de equipos participantes.">
-        <button @onclick="NewItem">Nuevo equipo</button>
+        <button @onclick="OpenNewModal">Nuevo equipo</button>
     </SectionHeader>
 
-    <div class="page-grid">
-        <section class="panel panel-form">
-            <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
-                <div class="form-grid two-columns">
-                    <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
-                    <div><label>Escudo</label><InputText @bind-Value="currentItem.Escudo" /></div>
-                    <div>
-                        <label>Grupo</label>
-                        <InputSelect @bind-Value="currentItem.IdGrupo">
-                            @foreach (var item in grupos)
-                            {
-                                <option value="@item.Id">@item.Nombre</option>
-                            }
-                        </InputSelect>
-                    </div>
-                    <div>
-                        <label>País</label>
-                        <InputSelect @bind-Value="currentItem.IdPais">
-                            @foreach (var item in paises)
-                            {
-                                <option value="@item.Id">@item.Nombre</option>
-                            }
-                        </InputSelect>
-                    </div>
-                    <div class="full-width">
-                        <label>Confederación</label>
-                        <InputSelect @bind-Value="currentItem.IdConfederacion">
-                            @foreach (var item in confederaciones)
-                            {
-                                <option value="@item.Id">@item.Nombre</option>
-                            }
-                        </InputSelect>
-                    </div>
-                </div>
-                <div class="actions-row">
-                    <button type="submit">Guardar</button>
-                    <button type="button" class="secondary" @onclick="NewItem">Limpiar</button>
-                </div>
-            </EditForm>
-        </section>
-
-        <section class="panel panel-table">
-            <table>
-                <thead>
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead>
+                <tr>
+                    <th>Escudo</th>
+                    <th>Nombre</th>
+                    <th>Grupo</th>
+                    <th>País</th>
+                    <th>Confederación</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
                     <tr>
-                        <th>Nombre</th>
-                        <th>Grupo</th>
-                        <th>País</th>
-                        <th>Confederación</th>
-                        <th></th>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(item.Escudo))
+                            {
+                                <img class="table-image" src="@item.Escudo" alt="Escudo de @item.Nombre" />
+                            }
+                            else
+                            {
+                                <span class="table-image table-image--placeholder">Sin imagen</span>
+                            }
+                        </td>
+                        <td>@item.Nombre</td>
+                        <td>@item.Grupo</td>
+                        <td>@item.Pais</td>
+                        <td>@item.Confederacion</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdEquipo)">Eliminar</button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in items)
-                    {
-                        <tr>
-                            <td>@item.Nombre</td>
-                            <td>@item.Grupo</td>
-                            <td>@item.Pais</td>
-                            <td>@item.Confederacion</td>
-                            <td class="actions-cell">
-                                <button class="secondary" @onclick="() => Edit(item)">Editar</button>
-                                <button class="danger" @onclick="() => DeleteAsync(item.IdEquipo)">Eliminar</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
-    </div>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice la información del equipo." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div><label>Nombre</label><InputText @bind-Value="currentItem.Nombre" /></div>
+                <div>
+                    <label>País</label>
+                    <InputSelect @bind-Value="currentItem.IdPais" @bind-Value:after="SyncTeamNameFromCountry">
+                        @foreach (var item in paises)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>Grupo</label>
+                    <InputSelect @bind-Value="currentItem.IdGrupo">
+                        @foreach (var item in grupos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>Confederación</label>
+                    <InputSelect @bind-Value="currentItem.IdConfederacion">
+                        @foreach (var item in confederaciones)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="full-width">
+                    <label>Escudo</label>
+                    <InputFile OnChange="OnShieldSelectedAsync" accept="image/*" />
+                </div>
+                @if (!string.IsNullOrWhiteSpace(currentItem.Escudo))
+                {
+                    <div class="full-width image-preview-card">
+                        <img class="image-preview" src="@currentItem.Escudo" alt="Vista previa del escudo" />
+                    </div>
+                }
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+        </EditForm>
+    </AppModal>
 }
 
 @code {
@@ -93,6 +112,8 @@ else
     private List<Models.Entities.LookupItem> grupos = new();
     private List<Models.Entities.LookupItem> paises = new();
     private List<Models.Entities.LookupItem> confederaciones = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nuevo equipo";
 
     protected override async Task OnInitializedAsync()
     {
@@ -109,7 +130,7 @@ else
     {
         await TeamService.SaveAsync(currentItem);
         await LoadAsync();
-        NewItem();
+        CloseModal();
     }
 
     private void Edit(Models.Entities.Equipo item)
@@ -123,6 +144,9 @@ else
             IdPais = item.IdPais,
             IdConfederacion = item.IdConfederacion
         };
+
+        modalTitle = "Editar equipo";
+        isModalOpen = true;
     }
 
     private async Task DeleteAsync(int id)
@@ -139,6 +163,41 @@ else
     {
         currentItem = new Models.Entities.Equipo();
         SetDefaults();
+    }
+
+    private void OpenNewModal()
+    {
+        NewItem();
+        modalTitle = "Nuevo equipo";
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        NewItem();
+    }
+
+    private Task SyncTeamNameFromCountry()
+    {
+        var selectedCountry = paises.FirstOrDefault(x => x.Id == currentItem.IdPais);
+        if (selectedCountry is not null)
+        {
+            currentItem.Nombre = selectedCountry.Nombre;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task OnShieldSelectedAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        if (file is null)
+        {
+            return;
+        }
+
+        currentItem.Escudo = await ImageStorageService.SaveImageAsync(file, "escudos");
     }
 
     private void SetDefaults()

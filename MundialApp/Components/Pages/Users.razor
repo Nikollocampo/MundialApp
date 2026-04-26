@@ -73,6 +73,8 @@ else
 @code {
     private List<Models.Entities.Usuario> items = new();
     private Models.Entities.Usuario currentItem = new() { Rol = "TRADICIONAL" };
+    private bool isModalOpen;
+    private string modalTitle = "Nuevo usuario";
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,7 +87,7 @@ else
     {
         await UserService.SaveAsync(currentItem);
         await LoadAsync();
-        NewItem();
+        CloseModal();
     }
 
     private void Edit(Models.Entities.Usuario item)
@@ -99,6 +101,9 @@ else
             Contrasena = item.Contrasena,
             Rol = item.Rol
         };
+
+        modalTitle = "Editar usuario";
+        isModalOpen = true;
     }
 
     private async Task DeleteAsync(string cedula)
@@ -112,4 +117,17 @@ else
     }
 
     private void NewItem() => currentItem = new Models.Entities.Usuario { Rol = "TRADICIONAL" };
+
+    private void OpenNewModal()
+    {
+        NewItem();
+        modalTitle = "Nuevo usuario";
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        NewItem();
+    }
 }

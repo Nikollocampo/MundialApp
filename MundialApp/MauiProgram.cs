@@ -25,6 +25,7 @@ namespace MundialApp
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSingleton<SessionState>();
             builder.Services.AddSingleton<PdfViewerService>();
+            builder.Services.AddSingleton<ImageStorageService>();
             builder.Services.AddSingleton<IOracleConnectionFactory, OracleConnectionFactory>();
             builder.Services.AddScoped<AuthRepository>();
             builder.Services.AddScoped<LookupRepository>();

@@ -56,6 +56,8 @@ else
 @code {
     private List<Pais> items = new();
     private Pais currentItem = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nuevo país";
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
     private async Task LoadAsync() => items = await Service.GetAllAsync();
@@ -64,7 +66,7 @@ else
     {
         await Service.SaveAsync(currentItem);
         await LoadAsync();
-        NewItem();
+        CloseModal();
     }
 
     private void Edit(Pais item)
@@ -76,6 +78,9 @@ else
             Msnm = item.Msnm,
             EsAnfitrion = item.EsAnfitrion
         };
+
+        modalTitle = "Editar país";
+        isModalOpen = true;
     }
 
     private async Task DeleteAsync(int id)
@@ -86,4 +91,17 @@ else
     }
 
     private void NewItem() => currentItem = new Pais();
+
+    private void OpenNewModal()
+    {
+        NewItem();
+        modalTitle = "Nuevo país";
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        NewItem();
+    }
 }

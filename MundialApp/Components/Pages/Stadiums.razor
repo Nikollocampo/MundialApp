@@ -65,6 +65,8 @@ else
     private List<Estadio> items = new();
     private List<LookupItem> ciudades = new();
     private Estadio currentItem = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nuevo estadio";
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,7 +81,7 @@ else
     {
         await Service.SaveAsync(currentItem);
         await LoadAsync();
-        NewItem();
+        CloseModal();
     }
 
     private void Edit(Estadio item)
@@ -91,6 +93,9 @@ else
             IdCiudad = item.IdCiudad,
             Capacidad = item.Capacidad
         };
+
+        modalTitle = "Editar estadio";
+        isModalOpen = true;
     }
 
     private async Task DeleteAsync(int id)
@@ -104,6 +109,19 @@ else
     {
         currentItem = new Estadio();
         SetDefaults();
+    }
+
+    private void OpenNewModal()
+    {
+        NewItem();
+        modalTitle = "Nuevo estadio";
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        NewItem();
     }
 
     private void SetDefaults() => currentItem.IdCiudad = ciudades.FirstOrDefault()?.Id ?? 0;

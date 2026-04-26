@@ -80,6 +80,8 @@ else
     private List<Models.Entities.Jugador> items = new();
     private Models.Entities.Jugador currentItem = new() { FechaNacimiento = DateTime.Today.AddYears(-20) };
     private List<Models.Entities.LookupItem> equipos = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nuevo jugador";
 
     protected override async Task OnInitializedAsync()
     {
@@ -94,7 +96,7 @@ else
     {
         await PlayerService.SaveAsync(currentItem);
         await LoadAsync();
-        NewItem();
+        CloseModal();
     }
 
     private void Edit(Models.Entities.Jugador item)
@@ -111,6 +113,9 @@ else
             Peso = item.Peso,
             Altura = item.Altura
         };
+
+        modalTitle = "Editar jugador";
+        isModalOpen = true;
     }
 
     private async Task DeleteAsync(int id)
@@ -127,6 +132,19 @@ else
     {
         currentItem = new Models.Entities.Jugador { FechaNacimiento = DateTime.Today.AddYears(-20) };
         SetDefaults();
+    }
+
+    private void OpenNewModal()
+    {
+        NewItem();
+        modalTitle = "Nuevo jugador";
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        NewItem();
     }
 
     private void SetDefaults()

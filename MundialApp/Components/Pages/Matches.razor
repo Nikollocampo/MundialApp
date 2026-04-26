@@ -96,6 +96,8 @@ else
     private Models.Entities.Partido currentItem = new() { Fecha = DateTime.Today.AddDays(1) };
     private List<Models.Entities.LookupItem> estadios = new();
     private List<Models.Entities.LookupItem> equipos = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nuevo partido";
 
     protected override async Task OnInitializedAsync()
     {
@@ -116,7 +118,7 @@ else
 
         await MatchService.SaveAsync(currentItem);
         await LoadAsync();
-        NewItem();
+        CloseModal();
     }
 
     private void Edit(Models.Entities.Partido item)
@@ -129,6 +131,9 @@ else
             IdLocal = item.IdLocal,
             IdVisitante = item.IdVisitante
         };
+
+        modalTitle = "Editar partido";
+        isModalOpen = true;
     }
 
     private async Task DeleteAsync(int id)
@@ -145,6 +150,19 @@ else
     {
         currentItem = new Models.Entities.Partido { Fecha = DateTime.Today.AddDays(1) };
         SetDefaults();
+    }
+
+    private void OpenNewModal()
+    {
+        NewItem();
+        modalTitle = "Nuevo partido";
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        NewItem();
     }
 
     private void SetDefaults()

@@ -55,6 +55,8 @@ else
     private List<Confederacion> items = new();
     private Confederacion currentItem = new() { FechaCreacion = DateTime.Today };
     private DateTime fechaCreacion = DateTime.Today;
+    private bool isModalOpen;
+    private string modalTitle = "Nueva confederación";
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -65,7 +67,7 @@ else
         currentItem.FechaCreacion = fechaCreacion;
         await Service.SaveAsync(currentItem);
         await LoadAsync();
-        NewItem();
+        CloseModal();
     }
 
     private void Edit(Confederacion item)
@@ -78,6 +80,8 @@ else
             FechaCreacion = item.FechaCreacion
         };
         fechaCreacion = item.FechaCreacion ?? DateTime.Today;
+        modalTitle = "Editar confederación";
+        isModalOpen = true;
     }
 
     private async Task DeleteAsync(int id)
@@ -91,5 +95,18 @@ else
     {
         currentItem = new Confederacion { FechaCreacion = DateTime.Today };
         fechaCreacion = DateTime.Today;
+    }
+
+    private void OpenNewModal()
+    {
+        NewItem();
+        modalTitle = "Nueva confederación";
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        NewItem();
     }
 }
