@@ -88,6 +88,11 @@ else
                 <button type="submit">Guardar</button>
                 <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p class="status-message error">@errorMessage</p>
+            }
         </EditForm>
     </AppModal>
 }
@@ -99,6 +104,7 @@ else
     private List<Models.Entities.LookupItem> equipos = new();
     private bool isModalOpen;
     private string modalTitle = "Nuevo partido";
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -114,17 +120,27 @@ else
     {
         if (currentItem.IdEstadio == 0 || currentItem.IdLocal == 0 || currentItem.IdVisitante == 0)
         {
+            errorMessage = "Debe seleccionar estadio, local y visitante.";
             return;
         }
 
         if (currentItem.IdLocal == currentItem.IdVisitante)
         {
+            errorMessage = "El equipo local y visitante no pueden ser iguales.";
             return;
         }
 
-        await MatchService.SaveAsync(currentItem);
-        await LoadAsync();
-        CloseModal();
+        try
+        {
+            errorMessage = null;
+            await MatchService.SaveAsync(currentItem);
+            await LoadAsync();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.GetBaseException().Message;
+        }
     }
 
     private void Edit(Models.Entities.Partido item)
@@ -155,6 +171,7 @@ else
     private void NewItem()
     {
         currentItem = new Models.Entities.Partido { Fecha = DateTime.Today.AddDays(1) };
+        errorMessage = null;
         SetDefaults();
     }
 

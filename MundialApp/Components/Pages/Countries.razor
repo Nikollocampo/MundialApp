@@ -47,6 +47,11 @@ else
                 <button type="submit">Guardar</button>
                 <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p class="status-message error">@errorMessage</p>
+            }
         </EditForm>
     </AppModal>
 }
@@ -56,15 +61,24 @@ else
     private Pais currentItem = new();
     private bool isModalOpen;
     private string modalTitle = "Nuevo país";
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
     private async Task LoadAsync() => items = await Service.GetAllAsync();
 
     private async Task SaveAsync()
     {
-        await Service.SaveAsync(currentItem);
-        await LoadAsync();
-        CloseModal();
+        try
+        {
+            errorMessage = null;
+            await Service.SaveAsync(currentItem);
+            await LoadAsync();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.GetBaseException().Message;
+        }
     }
 
     private void Edit(Pais item)
@@ -88,7 +102,11 @@ else
         if (currentItem.IdPais == id) NewItem();
     }
 
-    private void NewItem() => currentItem = new Pais();
+    private void NewItem()
+    {
+        currentItem = new Pais();
+        errorMessage = null;
+    }
 
     private void OpenNewModal()
     {

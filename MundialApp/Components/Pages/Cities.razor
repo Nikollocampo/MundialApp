@@ -53,6 +53,11 @@ else
                 <button type="submit">Guardar</button>
                 <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p class="status-message error">@errorMessage</p>
+            }
         </EditForm>
     </AppModal>
 }
@@ -63,6 +68,7 @@ else
     private Ciudad currentItem = new();
     private bool isModalOpen;
     private string modalTitle = "Nueva ciudad";
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -77,12 +83,21 @@ else
     {
         if (currentItem.IdPais == 0)
         {
+            errorMessage = "Debe seleccionar un país.";
             return;
         }
 
-        await Service.SaveAsync(currentItem);
-        await LoadAsync();
-        CloseModal();
+        try
+        {
+            errorMessage = null;
+            await Service.SaveAsync(currentItem);
+            await LoadAsync();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.GetBaseException().Message;
+        }
     }
 
     private void Edit(Ciudad item)
@@ -108,6 +123,7 @@ else
     private void NewItem()
     {
         currentItem = new Ciudad();
+        errorMessage = null;
         SetDefaults();
     }
 

@@ -105,6 +105,11 @@ else
                 <button type="submit">Guardar</button>
                 <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p class="status-message error">@errorMessage</p>
+            }
         </EditForm>
     </AppModal>
 }
@@ -117,6 +122,7 @@ else
     private List<Models.Entities.LookupItem> confederaciones = new();
     private bool isModalOpen;
     private string modalTitle = "Nuevo equipo";
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -140,12 +146,21 @@ else
     {
         if (currentItem.IdGrupo == 0 || currentItem.IdPais == 0 || currentItem.IdConfederacion == 0)
         {
+            errorMessage = "Debe seleccionar grupo, país y confederación.";
             return;
         }
 
-        await TeamService.SaveAsync(currentItem);
-        await LoadAsync();
-        CloseModal();
+        try
+        {
+            errorMessage = null;
+            await TeamService.SaveAsync(currentItem);
+            await LoadAsync();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.GetBaseException().Message;
+        }
     }
 
     private void Edit(Models.Entities.Equipo item)
@@ -178,6 +193,7 @@ else
     private void NewItem()
     {
         currentItem = new Models.Entities.Equipo();
+        errorMessage = null;
         SetDefaults();
     }
 

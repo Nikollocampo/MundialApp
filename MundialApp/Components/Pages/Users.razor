@@ -65,6 +65,11 @@ else
                 <button type="submit">Guardar</button>
                 <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p class="status-message error">@errorMessage</p>
+            }
         </EditForm>
     </AppModal>
 }
@@ -74,6 +79,7 @@ else
     private Models.Entities.Usuario currentItem = new() { Rol = string.Empty };
     private bool isModalOpen;
     private string modalTitle = "Nuevo usuario";
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,12 +92,21 @@ else
     {
         if (string.IsNullOrWhiteSpace(currentItem.Rol))
         {
+            errorMessage = "Debe seleccionar un rol.";
             return;
         }
 
-        await UserService.SaveAsync(currentItem);
-        await LoadAsync();
-        CloseModal();
+        try
+        {
+            errorMessage = null;
+            await UserService.SaveAsync(currentItem);
+            await LoadAsync();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.GetBaseException().Message;
+        }
     }
 
     private void Edit(Models.Entities.Usuario item)
@@ -120,7 +135,11 @@ else
         }
     }
 
-    private void NewItem() => currentItem = new Models.Entities.Usuario { Rol = string.Empty };
+    private void NewItem()
+    {
+        currentItem = new Models.Entities.Usuario { Rol = string.Empty };
+        errorMessage = null;
+    }
 
     private void OpenNewModal()
     {

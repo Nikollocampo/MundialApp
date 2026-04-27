@@ -41,6 +41,11 @@ else
                 <button type="submit">Guardar</button>
                 <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p class="status-message error">@errorMessage</p>
+            }
         </EditForm>
     </AppModal>
 }
@@ -50,15 +55,24 @@ else
     private Grupo currentItem = new();
     private bool isModalOpen;
     private string modalTitle = "Nuevo grupo";
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
     private async Task LoadAsync() => items = await Service.GetAllAsync();
 
     private async Task SaveAsync()
     {
-        await Service.SaveAsync(currentItem);
-        await LoadAsync();
-        CloseModal();
+        try
+        {
+            errorMessage = null;
+            await Service.SaveAsync(currentItem);
+            await LoadAsync();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.GetBaseException().Message;
+        }
     }
 
     private void Edit(Grupo item)
@@ -75,7 +89,11 @@ else
         if (currentItem.IdGrupo == id) NewItem();
     }
 
-    private void NewItem() => currentItem = new Grupo();
+    private void NewItem()
+    {
+        currentItem = new Grupo();
+        errorMessage = null;
+    }
 
     private void OpenNewModal()
     {
