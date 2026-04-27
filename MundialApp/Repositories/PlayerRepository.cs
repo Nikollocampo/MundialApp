@@ -30,7 +30,10 @@ public sealed class PlayerRepository(IOracleConnectionFactory connectionFactory)
             cancellationToken: cancellationToken);
 
     public Task SaveAsync(Jugador jugador, CancellationToken cancellationToken = default)
-        => jugador.IdJugador == 0
+    {
+        NormalizeAndValidate(jugador);
+
+        return jugador.IdJugador == 0
             ? ExecuteAsync(
                 """
                 INSERT INTO jugador (nombre, id_equipo, posicion, fecha_nacimiento, edad, costo, peso, altura)
@@ -53,6 +56,7 @@ public sealed class PlayerRepository(IOracleConnectionFactory connectionFactory)
                 """,
                 BuildParameters(jugador, true),
                 cancellationToken);
+    }
 
     public Task DeleteAsync(int idJugador, CancellationToken cancellationToken = default)
         => ExecuteAsync("DELETE FROM jugador WHERE id_jugador = :id_jugador", new[] { Param("id_jugador", idJugador) }, cancellationToken);
@@ -77,5 +81,36 @@ public sealed class PlayerRepository(IOracleConnectionFactory connectionFactory)
         }
 
         return parameters;
+    }
+
+    private static void NormalizeAndValidate(Jugador jugador)
+    {
+        jugador.Costo = Math.Round(jugador.Costo, 2, MidpointRounding.AwayFromZero);
+        jugador.Peso = jugador.Peso is decimal peso
+            ? Math.Round(peso, 2, MidpointRounding.AwayFromZero)
+            : null;
+        jugador.Altura = jugador.Altura is decimal altura
+            ? Math.Round(altura, 2, MidpointRounding.AwayFromZero)
+            : null;
+
+        if (jugador.Edad is < 0 or > 999)
+        {
+            throw new InvalidOperationException("La edad debe estar entre 0 y 999.");
+        }
+
+        if (jugador.Costo is < 0 or > 9999999999999.99m)
+        {
+            throw new InvalidOperationException("El costo excede el tamaño permitido por la base de datos.");
+        }
+
+        if (jugador.Peso is < 0 or > 999.99m)
+        {
+            throw new InvalidOperationException("El peso debe tener máximo 3 enteros y 2 decimales.");
+        }
+
+        if (jugador.Altura is < 0 or > 99.99m)
+        {
+            throw new InvalidOperationException("La altura debe tener máximo 2 enteros y 2 decimales.");
+        }
     }
 }

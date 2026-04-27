@@ -81,6 +81,7 @@ else
     private List<Models.Entities.LookupItem> equipos = new();
     private bool isModalOpen;
     private string modalTitle = "Nuevo jugador";
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -95,12 +96,21 @@ else
     {
         if (currentItem.IdEquipo == 0)
         {
+            errorMessage = "Debe seleccionar un equipo.";
             return;
         }
 
-        await PlayerService.SaveAsync(currentItem);
-        await LoadAsync();
-        CloseModal();
+        try
+        {
+            errorMessage = null;
+            await PlayerService.SaveAsync(currentItem);
+            await LoadAsync();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
     }
 
     private void Edit(Models.Entities.Jugador item)
@@ -135,6 +145,7 @@ else
     private void NewItem()
     {
         currentItem = new Models.Entities.Jugador { FechaNacimiento = DateTime.Today.AddYears(-20) };
+        errorMessage = null;
         SetDefaults();
     }
 
