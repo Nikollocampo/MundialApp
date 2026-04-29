@@ -19,7 +19,9 @@ else
         <table>
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Fecha</th>
+                    <th>Hora</th>
                     <th>Partido</th>
                     <th>Estadio</th>
                     <th>Ciudad</th>
@@ -31,7 +33,9 @@ else
                 @foreach (var item in items)
                 {
                     <tr>
+                        <td>@item.IdPartido</td>
                         <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@(item.Hora?.ToString(@"hh\:mm") ?? "N/A")</td>
                         <td>@item.EquipoLocal vs @item.EquipoVisitante</td>
                         <td>@item.Estadio</td>
                         <td>@item.Ciudad</td>
@@ -62,6 +66,10 @@ else
                 <div>
                     <label>Fecha</label>
                     <InputDate @bind-Value="currentItem.Fecha" />
+                </div>
+                <div>
+                    <label>Hora</label>
+                    <InputText @bind-Value="horaString" placeholder="HH:mm" />
                 </div>
                 <div>
                     <label>Local</label>
@@ -105,6 +113,7 @@ else
     private bool isModalOpen;
     private string modalTitle = "Nuevo partido";
     private string? errorMessage;
+    private string horaString = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -130,6 +139,19 @@ else
             return;
         }
 
+        if (!string.IsNullOrWhiteSpace(horaString))
+        {
+            if (TimeSpan.TryParse(horaString, out var hora))
+            {
+                currentItem.Hora = hora;
+            }
+            else
+            {
+                errorMessage = "El formato de hora debe ser HH:mm (ej: 14:30)";
+                return;
+            }
+        }
+
         try
         {
             errorMessage = null;
@@ -139,7 +161,7 @@ else
         }
         catch (Exception ex)
         {
-            errorMessage = ex.GetBaseException().Message;
+            errorMessage = ex.Message;
         }
     }
 
@@ -150,9 +172,12 @@ else
             IdPartido = item.IdPartido,
             IdEstadio = item.IdEstadio,
             Fecha = item.Fecha,
+            Hora = item.Hora,
             IdLocal = item.IdLocal,
             IdVisitante = item.IdVisitante
         };
+
+        horaString = item.Hora?.ToString(@"hh\:mm") ?? "";
 
         modalTitle = "Editar partido";
         isModalOpen = true;
@@ -171,6 +196,7 @@ else
     private void NewItem()
     {
         currentItem = new Models.Entities.Partido { Fecha = DateTime.Today.AddDays(1) };
+        horaString = "";
         errorMessage = null;
         SetDefaults();
     }

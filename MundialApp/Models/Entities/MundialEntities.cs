@@ -82,6 +82,7 @@ public sealed class Partido
     public int IdPartido { get; set; }
     public int IdEstadio { get; set; }
     public DateTime Fecha { get; set; } = DateTime.Now;
+    public TimeSpan? Hora { get; set; }
     public int IdLocal { get; set; }
     public int IdVisitante { get; set; }
     public string? EquipoLocal { get; set; }

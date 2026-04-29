@@ -86,18 +86,6 @@ else
             errorMessage = "Debe seleccionar un país.";
             return;
         }
-
-        try
-        {
-            errorMessage = null;
-            await Service.SaveAsync(currentItem);
-            await LoadAsync();
-            CloseModal();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = ex.GetBaseException().Message;
-        }
     }
 
     private void Edit(Ciudad item)

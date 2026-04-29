@@ -254,7 +254,7 @@ tbody tr:hover {
 }
 
 .status-message.error {
-    background: #fee2e2;
+    background: transparent;
     color: var(--danger);
 }
 

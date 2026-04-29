@@ -33,6 +33,7 @@ public sealed class MatchRepository(IOracleConnectionFactory connectionFactory) 
                 IdPartido = reader.GetInt32(0),
                 IdEstadio = reader.GetInt32(1),
                 Fecha = reader.GetDateTime(2),
+                Hora = reader.IsDBNull(2) ? null : ((DateTime)reader.GetValue(2)).TimeOfDay,
                 IdLocal = reader.GetInt32(3),
                 EquipoLocal = reader.GetString(4),
                 IdVisitante = reader.GetInt32(5),
@@ -74,10 +75,12 @@ public sealed class MatchRepository(IOracleConnectionFactory connectionFactory) 
             Direction = System.Data.ParameterDirection.Output
         };
 
+        var fechaConHora = partido.Fecha.Date.Add(partido.Hora ?? TimeSpan.Zero);
+
         await using var command = await CreateCommandAsync(sql, new[]
         {
             Param("id_estadio", partido.IdEstadio),
-            Param("fecha", partido.Fecha),
+            Param("fecha", fechaConHora),
             output
         }, cancellationToken);
 
@@ -98,9 +101,11 @@ public sealed class MatchRepository(IOracleConnectionFactory connectionFactory) 
 
     private async Task UpdateAsync(Partido partido, CancellationToken cancellationToken)
     {
+        var fechaConHora = partido.Fecha.Date.Add(partido.Hora ?? TimeSpan.Zero);
+
         await ExecuteAsync(
             "UPDATE partido SET id_estadio = :id_estadio, fecha = :fecha WHERE id_partido = :id_partido",
-            new[] { Param("id_estadio", partido.IdEstadio), Param("fecha", partido.Fecha), Param("id_partido", partido.IdPartido) },
+            new[] { Param("id_estadio", partido.IdEstadio), Param("fecha", fechaConHora), Param("id_partido", partido.IdPartido) },
             cancellationToken);
 
         await ExecuteAsync(

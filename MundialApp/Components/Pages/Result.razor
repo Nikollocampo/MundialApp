@@ -1,7 +1,11 @@
 @page "/resultados"
 @inject ResultService ResultService
+@inject MatchService MatchService
 @inject LookupService LookupService
 @inject SessionState SessionState
+
+@using MundialApp.Services
+@using MundialApp.Models.Entities
 
 <PageTitle>Resultados</PageTitle>
 
@@ -84,16 +88,6 @@ else
                     <label>Goles Visitante</label>
                     <InputNumber @bind-Value="currentItem.GolesVisitante" />
                 </div>
-                <div>
-                    <label>Ganador (Opcional)</label>
-                    <InputSelect @bind-Value="currentItem.Ganador">
-                        <option value="">Sin seleccionar (Empate)</option>
-                        @foreach (var item in equipos)
-                        {
-                            <option value="@item.Id">@item.Nombre</option>
-                        }
-                    </InputSelect>
-                </div>
             </div>
             <div class="actions-row">
                 <button type="submit">Guardar</button>
@@ -121,6 +115,7 @@ else
     private Models.Entities.Resultado currentItem = new();
     private List<Models.Entities.LookupItem> partidos = new();
     private List<Models.Entities.LookupItem> equipos = new();
+    private List<Models.Entities.Partido> todosLosPartidos = new();
     private bool isModalOpen;
     private string modalTitle = "Nuevo resultado";
     private string? errorMessage;
@@ -131,6 +126,7 @@ else
         {
             partidos = await LookupService.GetPartidosAsync();
             equipos = await LookupService.GetEquiposAsync();
+            todosLosPartidos = await MatchService.GetAllAsync();
             await LoadAsync();
         }
         catch (Exception ex)
@@ -170,6 +166,39 @@ else
     {
         try
         {
+            // Validar que se haya seleccionado un partido
+            if (currentItem.IdPartido == 0)
+            {
+                errorMessage = "Debe seleccionar un partido.";
+                return;
+            }
+
+            // Validar que los goles sean válidos (no negativos)
+            if (currentItem.GolesLocal < 0 || currentItem.GolesVisitante < 0)
+            {
+                errorMessage = "Los goles no pueden ser negativos.";
+                return;
+            }
+
+            // Calcular el ganador automáticamente basado en los goles
+            var partido = todosLosPartidos.FirstOrDefault(p => p.IdPartido == currentItem.IdPartido);
+            if (partido != null)
+            {
+                if (currentItem.GolesLocal > currentItem.GolesVisitante)
+                {
+                    currentItem.Ganador = partido.IdLocal;
+                }
+                else if (currentItem.GolesVisitante > currentItem.GolesLocal)
+                {
+                    currentItem.Ganador = partido.IdVisitante;
+                }
+                else
+                {
+                    currentItem.Ganador = null; // Empate
+
+                }
+            }
+
             await ResultService.SaveAsync(currentItem);
             await LoadAsync();
             isModalOpen = false;

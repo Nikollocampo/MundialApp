@@ -22,23 +22,16 @@ else
                     <th>Jugador</th>
                     <th>Descripción</th>
                     <th>Fecha Inicio</th>
-                    <th>Estado</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in items)
                 {
-                    var estado = item.FechaInicio.AddDays(30) <= DateTime.Now ? "Recuperado" : "Activo";
                     <tr>
                         <td>@item.Jugador?.Nombre</td>
                         <td>@item.Descripcion</td>
                         <td>@item.FechaInicio.ToString("dd/MM/yyyy")</td>
-                        <td>
-                            <span class="badge @(estado == "Recuperado" ? "badge-success" : "badge-danger")">
-                                @estado
-                            </span>
-                        </td>
                         <td class="actions-cell">
                             <button class="secondary" @onclick="() => Edit(item)">Editar</button>
                             <button class="danger" @onclick="() => DeleteAsync(item.IdLesion)">Eliminar</button>
