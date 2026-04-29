@@ -1,0 +1,198 @@
+@page "/resultados"
+@inject ResultService ResultService
+@inject LookupService LookupService
+@inject SessionState SessionState
+
+<PageTitle>Resultados</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Gestión de resultados" Subtitle="Registro de resultados de partidos.">
+        <button @onclick="OpenNewModal">Nuevo resultado</button>
+    </SectionHeader>
+
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead>
+                <tr>
+                    <th>Partido</th>
+                    <th>Resultado</th>
+                    <th>Ganador</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Partido?.EquipoLocal vs @item.Partido?.EquipoVisitante</td>
+                        <td>
+                            <span class="score-display">
+                                @item.GolesLocal - @item.GolesVisitante
+                            </span>
+                        </td>
+                        <td>
+                            @if (item.Ganador.HasValue && item.EquipoGanador != null)
+                            {
+                                <span class="badge badge-success">@item.EquipoGanador.Nombre</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Empate</span>
+                            }
+                        </td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdResultado)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice el resultado del partido." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div>
+                    <label>Partido</label>
+                    @if (partidos == null || partidos.Count == 0)
+                    {
+                        <p class="status-message warning">No hay partidos disponibles en la base de datos</p>
+                    }
+                    else
+                    {
+                        <InputSelect @bind-Value="currentItem.IdPartido">
+                            <option value="0">Seleccione...</option>
+                            @foreach (var item in partidos)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    }
+                </div>
+                <div></div>
+                <div>
+                    <label>Goles Local</label>
+                    <InputNumber @bind-Value="currentItem.GolesLocal" />
+                </div>
+                <div>
+                    <label>Goles Visitante</label>
+                    <InputNumber @bind-Value="currentItem.GolesVisitante" />
+                </div>
+                <div>
+                    <label>Ganador (Opcional)</label>
+                    <InputSelect @bind-Value="currentItem.Ganador">
+                        <option value="">Sin seleccionar (Empate)</option>
+                        @foreach (var item in equipos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p class="status-message error">@errorMessage</p>
+            }
+        </EditForm>
+    </AppModal>
+}
+
+<style>
+    .score-display {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #0066cc;
+    }
+</style>
+
+@code {
+    private List<Models.Entities.Resultado> items = new();
+    private Models.Entities.Resultado currentItem = new();
+    private List<Models.Entities.LookupItem> partidos = new();
+    private List<Models.Entities.LookupItem> equipos = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nuevo resultado";
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            partidos = await LookupService.GetPartidosAsync();
+            equipos = await LookupService.GetEquiposAsync();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar datos: {ex.Message}";
+        }
+    }
+
+    private async Task LoadAsync() => items = await ResultService.GetAllAsync();
+
+    private void OpenNewModal()
+    {
+        currentItem = new();
+        modalTitle = "Nuevo resultado";
+        isModalOpen = true;
+        errorMessage = null;
+    }
+
+    private void Edit(Models.Entities.Resultado item)
+    {
+        currentItem = new Models.Entities.Resultado
+        {
+            IdResultado = item.IdResultado,
+            IdPartido = item.IdPartido,
+            GolesLocal = item.GolesLocal,
+            GolesVisitante = item.GolesVisitante,
+            Ganador = item.Ganador,
+            Partido = item.Partido,
+            EquipoGanador = item.EquipoGanador
+        };
+        modalTitle = "Editar resultado";
+        isModalOpen = true;
+        errorMessage = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            await ResultService.SaveAsync(currentItem);
+            await LoadAsync();
+            isModalOpen = false;
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        try
+        {
+            await ResultService.DeleteAsync(id);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void CloseModal() => isModalOpen = false;
+}

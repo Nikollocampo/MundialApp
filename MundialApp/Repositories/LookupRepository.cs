@@ -40,4 +40,27 @@ public sealed class LookupRepository(IOracleConnectionFactory connectionFactory)
             "SELECT id_ciudad, nombre FROM ciudad ORDER BY nombre",
             reader => new LookupItem { Id = reader.GetInt32(0), Nombre = reader.GetString(1) },
             cancellationToken: cancellationToken);
+
+    public Task<List<LookupItem>> GetJugadoresAsync(CancellationToken cancellationToken = default)
+        => QueryAsync(
+            "SELECT id_jugador, nombre FROM jugador ORDER BY nombre",
+            reader => new LookupItem { Id = reader.GetInt32(0), Nombre = reader.GetString(1) },
+            cancellationToken: cancellationToken);
+
+    public Task<List<LookupItem>> GetPartidosAsync(CancellationToken cancellationToken = default)
+        => QueryAsync(
+            """
+            SELECT p.id_partido,
+                   TO_CHAR(p.fecha, 'DD/MM/YYYY HH24:MI') || ' - ' ||
+                   COALESCE(el.nombre, 'Local ?') || ' vs ' ||
+                   COALESCE(ev.nombre, 'Visitante ?') AS nombre
+            FROM partido p
+            LEFT JOIN participacion pl ON pl.id_partido = p.id_partido AND pl.condicion = 'LOCAL'
+            LEFT JOIN equipo el ON el.id_equipo = pl.id_equipo
+            LEFT JOIN participacion pv ON pv.id_partido = p.id_partido AND pv.condicion = 'VISITANTE'
+            LEFT JOIN equipo ev ON ev.id_equipo = pv.id_equipo
+            ORDER BY p.fecha DESC
+            """,
+            reader => new LookupItem { Id = reader.GetInt32(0), Nombre = reader.GetString(1) },
+            cancellationToken: cancellationToken);
 }

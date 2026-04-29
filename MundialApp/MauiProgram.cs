@@ -39,9 +39,13 @@ namespace MundialApp
             builder.Services.AddScoped<CityRepository>();
             builder.Services.AddScoped<StadiumRepository>();
             builder.Services.AddScoped<GroupRepository>();
-            builder.Services.AddScoped<CoachRepository>();
+            builder.Services.AddScoped<CoachRepository>(); 
+            builder.Services.AddScoped<LesionRepository>();
+            builder.Services.AddScoped<ParticipationRepository>();
+            builder.Services.AddScoped<ResultRepository>();
             builder.Services.AddScoped<QueryRepository>();
             builder.Services.AddScoped<ReportRepository>();
+
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<LookupService>();
             builder.Services.AddScoped<DashboardService>();
@@ -55,11 +59,15 @@ namespace MundialApp
             builder.Services.AddScoped<StadiumService>();
             builder.Services.AddScoped<GroupService>();
             builder.Services.AddScoped<CoachService>();
+            builder.Services.AddScoped<LesionService>();
+            builder.Services.AddScoped<ParticipationService>();
+            builder.Services.AddScoped<ResultService>();
             builder.Services.AddScoped<QueryService>();
             builder.Services.AddScoped<ReportService>();
+           
 
 #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
 

@@ -1,0 +1,184 @@
+@page "/participaciones"
+@inject ParticipationService ParticipationService
+@inject LookupService LookupService
+@inject SessionState SessionState
+
+<PageTitle>Participaciones</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Gestión de participaciones" Subtitle="Registro de participación de equipos en partidos.">
+        <button @onclick="OpenNewModal">Nueva participación</button>
+    </SectionHeader>
+
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead>
+                <tr>
+                    <th>Equipo</th>
+                    <th>Partido</th>
+                    <th>Condición</th>
+                    <th>Sanciones</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@item.Equipo?.Nombre</td>
+                        <td>@item.Partido?.EquipoLocal vs @item.Partido?.EquipoVisitante</td>
+                        <td>
+                            <span class="badge @(item.Condicion == "LOCAL" ? "badge-primary" : "badge-secondary")">
+                                @item.Condicion
+                            </span>
+                        </td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Sanciones) ? "Sin sanciones" : item.Sanciones)</td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.Codigo)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice la participación del equipo." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div>
+                    <label>Equipo</label>
+                    <InputSelect @bind-Value="currentItem.IdEquipo">
+                        <option value="0">Seleccione...</option>
+                        @foreach (var item in equipos)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>Partido</label>
+                    @if (partidos == null || partidos.Count == 0)
+                    {
+                        <p class="status-message warning">No hay partidos disponibles en la base de datos</p>
+                    }
+                    else
+                    {
+                        <InputSelect @bind-Value="currentItem.IdPartido">
+                            <option value="0">Seleccione...</option>
+                            @foreach (var item in partidos)
+                            {
+                                <option value="@item.Id">@item.Nombre</option>
+                            }
+                        </InputSelect>
+                    }
+                </div>
+                <div>
+                    <label>Condición</label>
+                    <InputSelect @bind-Value="currentItem.Condicion">
+                        <option value="">Seleccione...</option>
+                        <option value="LOCAL">Local</option>
+                        <option value="VISITANTE">Visitante</option>
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>Sanciones</label>
+                    <InputText @bind-Value="currentItem.Sanciones" placeholder="Opcional" />
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p class="status-message error">@errorMessage</p>
+            }
+        </EditForm>
+    </AppModal>
+}
+
+@code {
+    private List<Models.Entities.Participacion> items = new();
+    private Models.Entities.Participacion currentItem = new();
+    private List<Models.Entities.LookupItem> equipos = new();
+    private List<Models.Entities.LookupItem> partidos = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nueva participación";
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            equipos = await LookupService.GetEquiposAsync();
+            partidos = await LookupService.GetPartidosAsync();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar datos: {ex.Message}";
+        }
+    }
+
+    private async Task LoadAsync() => items = await ParticipationService.GetAllAsync();
+
+    private void OpenNewModal()
+    {
+        currentItem = new();
+        modalTitle = "Nueva participación";
+        isModalOpen = true;
+        errorMessage = null;
+    }
+
+    private void Edit(Models.Entities.Participacion item)
+    {
+        currentItem = new Models.Entities.Participacion
+        {
+            Codigo = item.Codigo,
+            IdEquipo = item.IdEquipo,
+            IdPartido = item.IdPartido,
+            Condicion = item.Condicion,
+            Sanciones = item.Sanciones
+        };
+        modalTitle = "Editar participación";
+        isModalOpen = true;
+        errorMessage = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            await ParticipationService.SaveAsync(currentItem);
+            await LoadAsync();
+            isModalOpen = false;
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        try
+        {
+            await ParticipationService.DeleteAsync(id);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void CloseModal() => isModalOpen = false;
+}

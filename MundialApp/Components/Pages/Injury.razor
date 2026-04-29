@@ -1,0 +1,162 @@
+@page "/lesiones"
+@inject LesionService LesionService
+@inject LookupService LookupService
+@inject SessionState SessionState
+
+<PageTitle>Lesiones</PageTitle>
+
+@if (!SessionState.CanEditData)
+{
+    <AccessDenied />
+}
+else
+{
+    <SectionHeader Title="Gestión de lesiones" Subtitle="Registro y seguimiento de lesiones de jugadores.">
+        <button @onclick="OpenNewModal">Nueva lesión</button>
+    </SectionHeader>
+
+    <section class="panel panel-table panel-table--full">
+        <table>
+            <thead>
+                <tr>
+                    <th>Jugador</th>
+                    <th>Descripción</th>
+                    <th>Fecha Inicio</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    var estado = item.FechaInicio.AddDays(30) <= DateTime.Now ? "Recuperado" : "Activo";
+                    <tr>
+                        <td>@item.Jugador?.Nombre</td>
+                        <td>@item.Descripcion</td>
+                        <td>@item.FechaInicio.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <span class="badge @(estado == "Recuperado" ? "badge-success" : "badge-danger")">
+                                @estado
+                            </span>
+                        </td>
+                        <td class="actions-cell">
+                            <button class="secondary" @onclick="() => Edit(item)">Editar</button>
+                            <button class="danger" @onclick="() => DeleteAsync(item.IdLesion)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice la información de la lesión." OnClose="CloseModal">
+        <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
+            <div class="form-grid two-columns">
+                <div>
+                    <label>Jugador</label>
+                    <InputSelect @bind-Value="currentItem.IdJugador">
+                        <option value="0">Seleccione...</option>
+                        @foreach (var item in jugadores)
+                        {
+                            <option value="@item.Id">@item.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label>Fecha Inicio</label>
+                    <InputDate @bind-Value="currentItem.FechaInicio" />
+                </div>
+                <div class="full-width">
+                    <label>Descripción</label>
+                    <InputTextArea @bind-Value="currentItem.Descripcion" />
+                </div>
+            </div>
+            <div class="actions-row">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p class="status-message error">@errorMessage</p>
+            }
+        </EditForm>
+    </AppModal>
+}
+
+@code {
+    private List<Models.Entities.Lesion> items = new();
+    private Models.Entities.Lesion currentItem = new() { FechaInicio = DateTime.Now };
+    private List<Models.Entities.LookupItem> jugadores = new();
+    private bool isModalOpen;
+    private string modalTitle = "Nueva lesión";
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            jugadores = await LookupService.GetJugadoresAsync();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar datos: {ex.Message}";
+        }
+    }
+
+    private async Task LoadAsync() => items = await LesionService.GetAllAsync();
+
+    private void OpenNewModal()
+    {
+        currentItem = new() { FechaInicio = DateTime.Now };
+        modalTitle = "Nueva lesión";
+        isModalOpen = true;
+        errorMessage = null;
+    }
+
+    private void Edit(Models.Entities.Lesion item)
+    {
+        currentItem = new Models.Entities.Lesion
+        {
+            IdLesion = item.IdLesion,
+            IdJugador = item.IdJugador,
+            FechaInicio = item.FechaInicio,
+            Descripcion = item.Descripcion,
+            Jugador = item.Jugador
+        };
+        modalTitle = "Editar lesión";
+        isModalOpen = true;
+        errorMessage = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            await LesionService.SaveAsync(currentItem);
+            await LoadAsync();
+            isModalOpen = false;
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        try
+        {
+            await LesionService.DeleteAsync(id);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void CloseModal() => isModalOpen = false;
+}

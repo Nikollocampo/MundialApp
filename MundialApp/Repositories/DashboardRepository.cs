@@ -15,6 +15,8 @@ public sealed class DashboardRepository(IOracleConnectionFactory connectionFacto
             TotalPartidos = await CountAsync("SELECT COUNT(*) FROM partido", cancellationToken),
             TotalEstadios = await CountAsync("SELECT COUNT(*) FROM estadio", cancellationToken),
             TotalUsuarios = await CountAsync("SELECT COUNT(*) FROM usuario", cancellationToken),
+            TotalParticipaciones = await CountAsync("SELECT COUNT(*) FROM participacion", cancellationToken),
+            TotalLesiones = await CountAsync("SELECT COUNT(*) FROM lesion", cancellationToken),
             ProximosPartidos = await GetUpcomingMatchesAsync(cancellationToken),
             PaisesAnfitriones = await QueryAsync(
                 "SELECT nombre FROM pais WHERE es_anfitrion = 1 ORDER BY nombre",
