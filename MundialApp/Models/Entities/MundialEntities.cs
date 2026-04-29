@@ -90,6 +90,42 @@ public sealed class Partido
     public string? Ciudad { get; set; }
     public string? Pais { get; set; }
 }
+public sealed class Lesion
+{
+    public int IdLesion { get; set; }
+    public int IdJugador { get; set; }
+    public DateTime FechaInicio { get; set; }
+    public string Descripcion { get; set; } = string.Empty;
+
+    // Navegación
+    public Jugador? Jugador { get; set; }
+}
+
+public sealed class Participacion
+{
+    public int Codigo { get; set; }
+    public int IdEquipo { get; set; }
+    public int IdPartido { get; set; }
+    public string Condicion { get; set; } = string.Empty; // "LOCAL" | "VISITANTE"
+    public string? Sanciones { get; set; }
+
+    // Navegación
+    public Equipo? Equipo { get; set; }
+    public Partido? Partido { get; set; }
+}
+
+public sealed class Resultado
+{
+    public int IdResultado { get; set; }
+    public int IdPartido { get; set; }
+    public int GolesLocal { get; set; }
+    public int GolesVisitante { get; set; }
+    public int? Ganador { get; set; } // id_equipo ganador, null si empate
+
+    // Navegación
+    public Partido? Partido { get; set; }
+    public Equipo? EquipoGanador { get; set; }
+}
 
 public sealed class Usuario
 {
