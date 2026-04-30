@@ -13,26 +13,37 @@
 }
 else
 {
-    <SectionHeader Title="Dashboard" Subtitle="Resumen general del mundial 2026.">
-        <button class="secondary" @onclick="LogoutAsync">Cerrar sesión</button>
-    </SectionHeader>
-
     @if (summary is null)
     {
         <p>Cargando información...</p>
     }
     else
     {
-        <section class="dashboard-grid">
+        <section class="dashboard-hero panel">
+            <div>
+                <span class="dashboard-hero__eyebrow">Panel principal</span>
+                <h1>Dashboard</h1>
+                <p>Resumen general del mundial 2026 con accesos rápidos e información relevante del torneo.</p>
+            </div>
+            <div class="dashboard-hero__meta">
+                <div class="dashboard-hero__user">
+                    <span>Usuario actual</span>
+                    <strong>@SessionState.CurrentUser?.Nombre</strong>
+                    <small>@SessionState.CurrentUser?.Rol</small>
+                </div>
+                <button class="secondary" @onclick="LogoutAsync">Cerrar sesión</button>
+            </div>
+        </section>
+
+        <section class="dashboard-grid dashboard-grid--compact">
             <DashboardCard Title="Equipos" Value="@summary.TotalEquipos.ToString()" />
             <DashboardCard Title="Jugadores" Value="@summary.TotalJugadores.ToString()" />
             <DashboardCard Title="Partidos" Value="@summary.TotalPartidos.ToString()" />
             <DashboardCard Title="Estadios" Value="@summary.TotalEstadios.ToString()" />
             <DashboardCard Title="Usuarios" Value="@summary.TotalUsuarios.ToString()" />
-            <DashboardCard Title="Rol actual" Value="@SessionState.CurrentUser!.Rol" />
         </section>
 
-        <div class="content-grid two-columns">
+        <div class="dashboard-main-grid">
             <section class="panel">
                 <h3>Países anfitriones</h3>
                 <ul class="host-list">
@@ -43,7 +54,12 @@ else
                 </ul>
             </section>
 
-            <section class="panel">
+            <section class="panel dashboard-role-panel">
+                <h3>Rol actual</h3>
+                <p class="dashboard-role-panel__value">@SessionState.CurrentUser!.Rol</p>
+            </section>
+
+            <section class="panel dashboard-table-panel">
                 <h3>Próximos partidos</h3>
                 <table>
                     <thead>

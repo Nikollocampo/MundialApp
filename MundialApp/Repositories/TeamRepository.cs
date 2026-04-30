@@ -30,27 +30,38 @@ public sealed class TeamRepository(IOracleConnectionFactory connectionFactory) :
             },
             cancellationToken: cancellationToken);
 
-    public Task SaveAsync(Equipo equipo, CancellationToken cancellationToken = default)
-        => equipo.IdEquipo == 0
-            ? ExecuteAsync(
+    public async Task SaveAsync(Equipo equipo, CancellationToken cancellationToken = default)
+    {
+        await ValidateAsync(equipo, cancellationToken);
+
+        equipo.Nombre = equipo.Nombre.Trim();
+
+        if (equipo.IdEquipo == 0)
+        {
+            await ExecuteAsync(
                 """
                 INSERT INTO equipo (nombre, escudo, id_grupo, id_pais, id_confederacion)
                 VALUES (:nombre, :escudo, :id_grupo, :id_pais, :id_confederacion)
                 """,
                 BuildParameters(equipo),
-                cancellationToken)
-            : ExecuteAsync(
-                """
-                UPDATE equipo
-                SET nombre = :nombre,
-                    escudo = :escudo,
-                    id_grupo = :id_grupo,
-                    id_pais = :id_pais,
-                    id_confederacion = :id_confederacion
-                WHERE id_equipo = :id_equipo
-                """,
-                BuildParameters(equipo, true),
                 cancellationToken);
+
+            return;
+        }
+
+        await ExecuteAsync(
+            """
+            UPDATE equipo
+            SET nombre = :nombre,
+                escudo = :escudo,
+                id_grupo = :id_grupo,
+                id_pais = :id_pais,
+                id_confederacion = :id_confederacion
+            WHERE id_equipo = :id_equipo
+            """,
+            BuildParameters(equipo, true),
+            cancellationToken);
+    }
 
     public Task DeleteAsync(int idEquipo, CancellationToken cancellationToken = default)
         => ExecuteAsync("DELETE FROM equipo WHERE id_equipo = :id_equipo", new[] { Param("id_equipo", idEquipo) }, cancellationToken);
@@ -72,5 +83,33 @@ public sealed class TeamRepository(IOracleConnectionFactory connectionFactory) :
         }
 
         return parameters;
+    }
+
+    private async Task ValidateAsync(Equipo equipo, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(equipo.Nombre))
+        {
+            throw new InvalidOperationException("Debe ingresar el nombre del equipo.");
+        }
+
+        if (equipo.IdGrupo == 0 || equipo.IdPais == 0 || equipo.IdConfederacion == 0)
+        {
+            throw new InvalidOperationException("Debe seleccionar grupo, país y confederación.");
+        }
+
+        var exists = await QuerySingleAsync(
+            "SELECT 1 FROM equipo WHERE UPPER(TRIM(nombre)) = UPPER(TRIM(:nombre)) AND id_equipo <> :id_equipo",
+            reader => reader.GetInt32(0),
+            new[]
+            {
+                Param("nombre", equipo.Nombre),
+                Param("id_equipo", equipo.IdEquipo)
+            },
+            cancellationToken);
+
+        if (exists == 1)
+        {
+            throw new InvalidOperationException("Ya existe un equipo registrado con ese nombre.");
+        }
     }
 }

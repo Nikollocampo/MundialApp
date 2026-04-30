@@ -46,6 +46,8 @@ public sealed class MatchRepository(IOracleConnectionFactory connectionFactory) 
 
     public async Task SaveAsync(Partido partido, CancellationToken cancellationToken = default)
     {
+        await ValidateAsync(partido, cancellationToken);
+
         if (partido.IdPartido == 0)
         {
             await InsertAsync(partido, cancellationToken);
@@ -117,5 +119,47 @@ public sealed class MatchRepository(IOracleConnectionFactory connectionFactory) 
             "UPDATE participacion SET id_equipo = :id_equipo WHERE id_partido = :id_partido AND condicion = 'VISITANTE'",
             new[] { Param("id_equipo", partido.IdVisitante), Param("id_partido", partido.IdPartido) },
             cancellationToken);
+    }
+
+    private async Task ValidateAsync(Partido partido, CancellationToken cancellationToken)
+    {
+        if (partido.IdEstadio == 0 || partido.IdLocal == 0 || partido.IdVisitante == 0)
+        {
+            throw new InvalidOperationException("Debe seleccionar estadio, equipo local y equipo visitante.");
+        }
+
+        if (partido.IdLocal == partido.IdVisitante)
+        {
+            throw new InvalidOperationException("El equipo local y el visitante no pueden ser el mismo.");
+        }
+
+        var fechaConHora = partido.Fecha.Date.Add(partido.Hora ?? TimeSpan.Zero);
+        var exists = await QuerySingleAsync(
+            """
+            SELECT 1
+            FROM partido p
+            INNER JOIN participacion pl ON pl.id_partido = p.id_partido AND pl.condicion = 'LOCAL'
+            INNER JOIN participacion pv ON pv.id_partido = p.id_partido AND pv.condicion = 'VISITANTE'
+            WHERE p.id_estadio = :id_estadio
+              AND p.fecha = :fecha
+              AND pl.id_equipo = :id_local
+              AND pv.id_equipo = :id_visitante
+              AND p.id_partido <> :id_partido
+            """,
+            reader => reader.GetInt32(0),
+            new[]
+            {
+                Param("id_estadio", partido.IdEstadio),
+                Param("fecha", fechaConHora),
+                Param("id_local", partido.IdLocal),
+                Param("id_visitante", partido.IdVisitante),
+                Param("id_partido", partido.IdPartido)
+            },
+            cancellationToken);
+
+        if (exists == 1)
+        {
+            throw new InvalidOperationException("Ya existe un partido registrado con el mismo estadio, fecha, hora y equipos.");
+        }
     }
 }

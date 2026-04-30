@@ -17,28 +17,60 @@ public sealed class ConfederationRepository(IOracleConnectionFactory connectionF
             },
             cancellationToken: cancellationToken);
 
-    public Task SaveAsync(Confederacion item, CancellationToken cancellationToken = default)
-        => item.IdConfederacion == 0
-            ? ExecuteAsync(
+    public async Task SaveAsync(Confederacion item, CancellationToken cancellationToken = default)
+    {
+        await ValidateAsync(item, cancellationToken);
+
+        if (item.IdConfederacion == 0)
+        {
+            await ExecuteAsync(
                 "INSERT INTO confederacion (nombre, cupos_mundial, fecha_creacion) VALUES (:nombre, :cupos_mundial, :fecha_creacion)",
                 new[]
                 {
-                    Param("nombre", item.Nombre),
+                    Param("nombre", item.Nombre.Trim()),
                     Param("cupos_mundial", item.CuposMundial),
                     Param("fecha_creacion", item.FechaCreacion ?? DateTime.Today)
                 },
-                cancellationToken)
-            : ExecuteAsync(
-                "UPDATE confederacion SET nombre = :nombre, cupos_mundial = :cupos_mundial, fecha_creacion = :fecha_creacion WHERE id_confederacion = :id_confederacion",
-                new[]
-                {
-                    Param("nombre", item.Nombre),
-                    Param("cupos_mundial", item.CuposMundial),
-                    Param("fecha_creacion", item.FechaCreacion ?? DateTime.Today),
-                    Param("id_confederacion", item.IdConfederacion)
-                },
                 cancellationToken);
+
+            return;
+        }
+
+        await ExecuteAsync(
+            "UPDATE confederacion SET nombre = :nombre, cupos_mundial = :cupos_mundial, fecha_creacion = :fecha_creacion WHERE id_confederacion = :id_confederacion",
+            new[]
+            {
+                Param("nombre", item.Nombre.Trim()),
+                Param("cupos_mundial", item.CuposMundial),
+                Param("fecha_creacion", item.FechaCreacion ?? DateTime.Today),
+                Param("id_confederacion", item.IdConfederacion)
+            },
+            cancellationToken);
+    }
 
     public Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         => ExecuteAsync("DELETE FROM confederacion WHERE id_confederacion = :id", new[] { Param("id", id) }, cancellationToken);
+
+    private async Task ValidateAsync(Confederacion item, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(item.Nombre))
+        {
+            throw new InvalidOperationException("Debe ingresar el nombre de la confederación.");
+        }
+
+        var exists = await QuerySingleAsync(
+            "SELECT 1 FROM confederacion WHERE UPPER(TRIM(nombre)) = UPPER(TRIM(:nombre)) AND id_confederacion <> :id_confederacion",
+            reader => reader.GetInt32(0),
+            new[]
+            {
+                Param("nombre", item.Nombre),
+                Param("id_confederacion", item.IdConfederacion)
+            },
+            cancellationToken);
+
+        if (exists == 1)
+        {
+            throw new InvalidOperationException("Ya existe una confederación registrada con ese nombre.");
+        }
+    }
 }

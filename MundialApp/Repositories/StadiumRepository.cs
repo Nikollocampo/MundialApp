@@ -25,17 +25,60 @@ public sealed class StadiumRepository(IOracleConnectionFactory connectionFactory
             },
             cancellationToken: cancellationToken);
 
-    public Task SaveAsync(Estadio item, CancellationToken cancellationToken = default)
-        => item.IdEstadio == 0
-            ? ExecuteAsync(
+    public async Task SaveAsync(Estadio item, CancellationToken cancellationToken = default)
+    {
+        await ValidateAsync(item, cancellationToken);
+
+        if (item.IdEstadio == 0)
+        {
+            await ExecuteAsync(
                 "INSERT INTO estadio (nombre, id_ciudad, capacidad) VALUES (:nombre, :id_ciudad, :capacidad)",
-                new[] { Param("nombre", item.Nombre), Param("id_ciudad", item.IdCiudad), Param("capacidad", item.Capacidad) },
-                cancellationToken)
-            : ExecuteAsync(
-                "UPDATE estadio SET nombre = :nombre, id_ciudad = :id_ciudad, capacidad = :capacidad WHERE id_estadio = :id_estadio",
-                new[] { Param("nombre", item.Nombre), Param("id_ciudad", item.IdCiudad), Param("capacidad", item.Capacidad), Param("id_estadio", item.IdEstadio) },
+                new[] { Param("nombre", item.Nombre.Trim()), Param("id_ciudad", item.IdCiudad), Param("capacidad", item.Capacidad) },
                 cancellationToken);
+
+            return;
+        }
+
+        await ExecuteAsync(
+            "UPDATE estadio SET nombre = :nombre, id_ciudad = :id_ciudad, capacidad = :capacidad WHERE id_estadio = :id_estadio",
+            new[] { Param("nombre", item.Nombre.Trim()), Param("id_ciudad", item.IdCiudad), Param("capacidad", item.Capacidad), Param("id_estadio", item.IdEstadio) },
+            cancellationToken);
+    }
 
     public Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         => ExecuteAsync("DELETE FROM estadio WHERE id_estadio = :id", new[] { Param("id", id) }, cancellationToken);
+
+    private async Task ValidateAsync(Estadio item, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(item.Nombre))
+        {
+            throw new InvalidOperationException("Debe ingresar el nombre del estadio.");
+        }
+
+        if (item.IdCiudad == 0)
+        {
+            throw new InvalidOperationException("Debe seleccionar una ciudad.");
+        }
+
+        if (item.Capacidad <= 0)
+        {
+            throw new InvalidOperationException("La capacidad del estadio debe ser mayor que cero.");
+        }
+
+        var exists = await QuerySingleAsync(
+            "SELECT 1 FROM estadio WHERE UPPER(TRIM(nombre)) = UPPER(TRIM(:nombre)) AND id_ciudad = :id_ciudad AND id_estadio <> :id_estadio",
+            reader => reader.GetInt32(0),
+            new[]
+            {
+                Param("nombre", item.Nombre),
+                Param("id_ciudad", item.IdCiudad),
+                Param("id_estadio", item.IdEstadio)
+            },
+            cancellationToken);
+
+        if (exists == 1)
+        {
+            throw new InvalidOperationException("Ya existe un estadio registrado con ese nombre para la ciudad seleccionada.");
+        }
+    }
 }

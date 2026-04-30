@@ -15,17 +15,49 @@ public sealed class GroupRepository(IOracleConnectionFactory connectionFactory) 
             },
             cancellationToken: cancellationToken);
 
-    public Task SaveAsync(Grupo item, CancellationToken cancellationToken = default)
-        => item.IdGrupo == 0
-            ? ExecuteAsync(
+    public async Task SaveAsync(Grupo item, CancellationToken cancellationToken = default)
+    {
+        await ValidateAsync(item, cancellationToken);
+
+        if (item.IdGrupo == 0)
+        {
+            await ExecuteAsync(
                 "INSERT INTO grupo (nombre) VALUES (:nombre)",
-                new[] { Param("nombre", item.Nombre) },
-                cancellationToken)
-            : ExecuteAsync(
-                "UPDATE grupo SET nombre = :nombre WHERE id_grupo = :id_grupo",
-                new[] { Param("nombre", item.Nombre), Param("id_grupo", item.IdGrupo) },
+                new[] { Param("nombre", item.Nombre.Trim()) },
                 cancellationToken);
+
+            return;
+        }
+
+        await ExecuteAsync(
+            "UPDATE grupo SET nombre = :nombre WHERE id_grupo = :id_grupo",
+            new[] { Param("nombre", item.Nombre.Trim()), Param("id_grupo", item.IdGrupo) },
+            cancellationToken);
+    }
 
     public Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         => ExecuteAsync("DELETE FROM grupo WHERE id_grupo = :id", new[] { Param("id", id) }, cancellationToken);
+
+    private async Task ValidateAsync(Grupo item, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(item.Nombre))
+        {
+            throw new InvalidOperationException("Debe ingresar el nombre del grupo.");
+        }
+
+        var exists = await QuerySingleAsync(
+            "SELECT 1 FROM grupo WHERE UPPER(TRIM(nombre)) = UPPER(TRIM(:nombre)) AND id_grupo <> :id_grupo",
+            reader => reader.GetInt32(0),
+            new[]
+            {
+                Param("nombre", item.Nombre),
+                Param("id_grupo", item.IdGrupo)
+            },
+            cancellationToken);
+
+        if (exists == 1)
+        {
+            throw new InvalidOperationException("Ya existe un grupo registrado con ese nombre.");
+        }
+    }
 }
