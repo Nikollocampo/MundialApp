@@ -30,6 +30,11 @@ public sealed class UserRepository(IOracleConnectionFactory connectionFactory) :
         usuario.Telefono = string.IsNullOrWhiteSpace(usuario.Telefono) ? null : usuario.Telefono.Trim();
         usuario.Rol = usuario.Rol.Trim().ToUpperInvariant();
 
+        if (string.Equals(usuario.Rol, "ADMINISTRADOR", StringComparison.OrdinalIgnoreCase))
+        {
+            await DeletePreviousAdministratorsAsync(usuario.Cedula, cancellationToken);
+        }
+
         await ExecuteAsync(
             """
             MERGE INTO usuario target
@@ -100,16 +105,27 @@ public sealed class UserRepository(IOracleConnectionFactory connectionFactory) :
         {
             throw new InvalidOperationException("Ya existe un usuario registrado con ese correo.");
         }
+    }
 
-        var adminCount = await QuerySingleAsync(
-            "SELECT COUNT(1) FROM usuario WHERE UPPER(rol) = 'ADMINISTRADOR' AND cedula <> :cedula",
-            reader => reader.GetInt32(0),
-            new[] { Param("cedula", usuario.Cedula) },
-            cancellationToken);
+    private async Task DeletePreviousAdministratorsAsync(string currentCedula, CancellationToken cancellationToken)
+    {
+        var admins = await QueryAsync(
+            "SELECT cedula FROM usuario WHERE UPPER(rol) = 'ADMINISTRADOR' AND cedula <> :cedula",
+            reader => reader.GetString(0),
+            new[] { Param("cedula", currentCedula) },
+            cancellationToken: cancellationToken);
 
-        if (string.Equals(usuario.Rol, "ADMINISTRADOR", StringComparison.OrdinalIgnoreCase) && adminCount > 0)
+        foreach (var adminCedula in admins)
         {
-            throw new InvalidOperationException("Actualmente el sistema no tiene un campo de estado para inactivar automáticamente al administrador anterior. Es necesario agregar esa columna en la tabla USUARIO para aplicar esa regla correctamente.");
+            await ExecuteAsync(
+                "DELETE FROM bitacora WHERE id_usuario = :cedula",
+                new[] { Param("cedula", adminCedula) },
+                cancellationToken);
+
+            await ExecuteAsync(
+                "DELETE FROM usuario WHERE cedula = :cedula",
+                new[] { Param("cedula", adminCedula) },
+                cancellationToken);
         }
     }
 }
