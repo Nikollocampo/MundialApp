@@ -26,19 +26,29 @@ public sealed class ReportService(ReportRepository repository)
     public Task<List<PaisPorSedeReporteItem>> GetCountriesByHostAsync(CancellationToken cancellationToken = default)
         => _repository.GetCountriesPlayingByHostCountryAsync(cancellationToken);
 
-    public byte[] BuildBitacoraPdf(IEnumerable<BitacoraReporteItem> items, DateTime desde, DateTime hasta)
-        => BuildTablePdf(
-            "Reporte de bitácora",
-            $"Rango: {desde:dd/MM/yyyy HH:mm} - {hasta:dd/MM/yyyy HH:mm}",
-            new[] { "Usuario", "Nombre", "Entrada", "Salida", "Acción" },
-            items.Select(item => new[]
-            {
-                item.Usuario,
-                item.Nombre,
-                item.FechaEntrada.ToString("dd/MM/yyyy HH:mm"),
-                item.FechaSalida?.ToString("dd/MM/yyyy HH:mm") ?? "-",
-                item.Accion ?? "-"
-            }));
+    public byte[] BuildBitacoraPdf(
+    IEnumerable<BitacoraReporteItem> items,
+    DateTime desde,
+    DateTime hasta)
+    => BuildTablePdf(
+        "Reporte de bitácora",
+        $"Rango: {desde:dd/MM/yyyy HH:mm} - {hasta:dd/MM/yyyy HH:mm}",
+        new[]
+        {
+            "Usuario",
+            "Tabla",
+            "Tipo Acción",
+            "Descripción",
+            "Fecha"
+        },
+        items.Select(item => new[]
+        {
+            item.Usuario,
+            item.TablaAfectada,
+            item.TipoAccion,
+            item.Descripcion ?? "-",
+            item.FechaAccion.ToString("dd/MM/yyyy HH:mm")
+        }));
 
     public byte[] BuildJugadoresPdf(IEnumerable<JugadorReporteItem> items)
         => BuildTablePdf(

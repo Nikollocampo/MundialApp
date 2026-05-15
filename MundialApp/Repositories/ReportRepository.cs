@@ -5,26 +5,36 @@ namespace MundialApp.Repositories;
 
 public sealed class ReportRepository(IOracleConnectionFactory connectionFactory) : OracleRepositoryBase(connectionFactory)
 {
-    public Task<List<BitacoraReporteItem>> GetBitacoraByDateRangeAsync(DateTime desde, DateTime hasta, CancellationToken cancellationToken = default)
-        => QueryAsync(
-            """
-            SELECT b.id_usuario, u.nombre, b.fecha_entrada, b.fecha_salida, b.accion
-            FROM bitacora b
-            INNER JOIN usuario u ON u.cedula = b.id_usuario
-            WHERE b.fecha_entrada BETWEEN :desde AND :hasta
-               OR NVL(b.fecha_salida, b.fecha_entrada) BETWEEN :desde AND :hasta
-            ORDER BY b.fecha_entrada
-            """,
-            reader => new BitacoraReporteItem
-            {
-                Usuario = reader.GetString(0),
-                Nombre = reader.GetString(1),
-                FechaEntrada = reader.GetDateTime(2),
-                FechaSalida = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
-                Accion = reader.IsDBNull(4) ? null : reader.GetString(4)
-            },
-            new[] { Param("desde", desde), Param("hasta", hasta) },
-            cancellationToken);
+    public Task<List<BitacoraReporteItem>> GetBitacoraByDateRangeAsync(
+    DateTime desde,
+    DateTime hasta,
+    CancellationToken cancellationToken = default)
+    => QueryAsync(
+        """
+        SELECT 
+            b.id_usuario,
+            b.tabla_afectada,
+            b.tipo_accion,
+            b.descripcion,
+            b.fecha_accion
+        FROM bitacora b
+        WHERE b.fecha_accion BETWEEN :desde AND :hasta
+        ORDER BY b.fecha_accion DESC
+        """,
+        reader => new BitacoraReporteItem
+        {
+            Usuario = reader.GetString(0),
+            TablaAfectada = reader.IsDBNull(1) ? "-" : reader.GetString(1),
+            TipoAccion = reader.GetString(2),
+            Descripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
+            FechaAccion = reader.GetDateTime(4)
+        },
+        new[]
+        {
+            Param("desde", desde),
+            Param("hasta", hasta)
+        },
+        cancellationToken);
 
     public Task<List<JugadorReporteItem>> GetPlayersByFiltersAsync(decimal? pesoMin, decimal? pesoMax, decimal? alturaMin, decimal? alturaMax, int? idEquipo, CancellationToken cancellationToken = default)
         => QueryAsync(

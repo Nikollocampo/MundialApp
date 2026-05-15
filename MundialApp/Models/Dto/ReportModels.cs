@@ -3,10 +3,10 @@ namespace MundialApp.Models.Dto;
 public sealed class BitacoraReporteItem
 {
     public string Usuario { get; set; } = string.Empty;
-    public string Nombre { get; set; } = string.Empty;
-    public DateTime FechaEntrada { get; set; }
-    public DateTime? FechaSalida { get; set; }
-    public string? Accion { get; set; }
+    public string TablaAfectada { get; set; } = string.Empty;
+    public string TipoAccion { get; set; } = string.Empty;
+    public string? Descripcion { get; set; }
+    public DateTime FechaAccion { get; set; }
 }
 
 public sealed class JugadorReporteItem

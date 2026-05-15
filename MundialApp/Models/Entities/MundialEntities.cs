@@ -158,9 +158,11 @@ public sealed class Bitacora
 {
     public int IdBitacora { get; set; }
     public string IdUsuario { get; set; } = string.Empty;
-    public DateTime FechaEntrada { get; set; }
-    public DateTime? FechaSalida { get; set; }
-    public string? Accion { get; set; }
+    public DateTime FechaAccion { get; set; } = DateTime.Now;
+    public string TablaAfectada { get; set; } = string.Empty;
+    public string TipoAccion { get; set; } = string.Empty; // INSERT, UPDATE, DELETE, LOGIN, LOGOUT
+    public string Descripcion { get; set; } = string.Empty;
+    public string? IdRegistro { get; set; }
 }
 
 public sealed class LookupItem

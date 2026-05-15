@@ -45,6 +45,7 @@ namespace MundialApp
             builder.Services.AddScoped<ResultRepository>();
             builder.Services.AddScoped<QueryRepository>();
             builder.Services.AddScoped<ReportRepository>();
+            builder.Services.AddScoped<AuditRepository>();
 
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<LookupService>();
@@ -64,6 +65,7 @@ namespace MundialApp
             builder.Services.AddScoped<ResultService>();
             builder.Services.AddScoped<QueryService>();
             builder.Services.AddScoped<ReportService>();
+            builder.Services.AddScoped<AuditService>();
            
 
 #if DEBUG
