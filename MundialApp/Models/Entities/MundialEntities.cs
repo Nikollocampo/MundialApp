@@ -70,11 +70,27 @@ public sealed class Jugador
     public int IdEquipo { get; set; }
     public string Posicion { get; set; } = string.Empty;
     public DateTime FechaNacimiento { get; set; } = DateTime.Today;
-    public int? Edad { get; set; }
     public decimal Costo { get; set; }
     public decimal? Peso { get; set; }
     public decimal? Altura { get; set; }
     public string? Equipo { get; set; }
+
+    // Propiedad calculada para la edad
+    [System.Text.Json.Serialization.JsonIgnore]
+    public int Edad
+    {
+        get
+        {
+            var hoy = DateTime.Today;
+            var edad = hoy.Year - FechaNacimiento.Year;
+
+            // Ajustar si el cumpleaños aún no ha ocurrido este año
+            if (FechaNacimiento.Date > hoy.AddYears(-edad))
+                edad--;
+
+            return edad;
+        }
+    }
 }
 
 public sealed class Partido

@@ -62,7 +62,10 @@ else
                 </div>
                 <div><label>Posición</label><InputText @bind-Value="currentItem.Posicion" /></div>
                 <div><label>Fecha nacimiento</label><InputDate @bind-Value="currentItem.FechaNacimiento" /></div>
-                <div><label>Edad</label><InputNumber @bind-Value="currentItem.Edad" /></div>
+                <div>
+                    <label>Edad</label>
+                    <input type="number" value="@currentItem.Edad" disabled class="input-disabled" />
+                </div>
                 <div><label>Costo</label><InputNumber @bind-Value="currentItem.Costo" /></div>
                 <div><label>Peso</label><InputNumber @bind-Value="currentItem.Peso" /></div>
                 <div><label>Altura</label><InputNumber @bind-Value="currentItem.Altura" /></div>
@@ -127,7 +130,6 @@ else
             IdEquipo = item.IdEquipo,
             Posicion = item.Posicion,
             FechaNacimiento = item.FechaNacimiento,
-            Edad = item.Edad,
             Costo = item.Costo,
             Peso = item.Peso,
             Altura = item.Altura

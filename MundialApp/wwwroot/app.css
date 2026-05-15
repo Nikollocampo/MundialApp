@@ -85,6 +85,16 @@ textarea {
     color: var(--text-main);
 }
 
+input:disabled,
+input.input-disabled,
+select:disabled,
+textarea:disabled {
+    background: #f1f5f9;
+    color: var(--text-soft);
+    cursor: not-allowed;
+    border-color: #cbd5e1;
+}
+
 label {
     display: block;
     margin-bottom: 0.45rem;
