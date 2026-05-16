@@ -102,7 +102,7 @@ public sealed class QueryRepository(IOracleConnectionFactory connectionFactory) 
                    COUNT(*) cantidad_menores
             FROM jugador j
             INNER JOIN equipo e ON e.id_equipo = j.id_equipo
-            WHERE NVL(j.edad, FLOOR(MONTHS_BETWEEN(SYSDATE, j.fecha_nacimiento) / 12)) < 21
+            WHERE TRUNC((SYSDATE - j.fecha_nacimiento) / 365.25) < 21
             GROUP BY e.nombre
             ORDER BY e.nombre
             """,
@@ -112,4 +112,4 @@ public sealed class QueryRepository(IOracleConnectionFactory connectionFactory) 
                 CantidadMenoresDe21 = reader.GetInt32(1)
             },
             cancellationToken: cancellationToken);
-}
+    }
