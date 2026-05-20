@@ -165,6 +165,19 @@ public sealed class Bitacora
     public string? IdRegistro { get; set; }
 }
 
+public sealed class Gol
+{
+    public int IdGol { get; set; }
+    public int Codigo { get; set; } // Referencia a Participacion
+    public int IdEquipo { get; set; }
+    public int IdJugador { get; set; }
+    public int Minuto { get; set; } // Validación: 1-130
+
+    // Navegación
+    public Jugador? Jugador { get; set; }
+    public Equipo? Equipo { get; set; }
+}
+
 public sealed class LookupItem
 {
     public int Id { get; set; }

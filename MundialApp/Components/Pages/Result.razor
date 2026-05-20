@@ -2,6 +2,7 @@
 @inject ResultService ResultService
 @inject MatchService MatchService
 @inject LookupService LookupService
+@inject GolService GolService
 @inject SessionState SessionState
 
 @using MundialApp.Services
@@ -59,7 +60,7 @@ else
         </table>
     </section>
 
-    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice el resultado del partido." OnClose="CloseModal">
+    <AppModal IsOpen="isModalOpen" Title="@modalTitle" Subtitle="Registre o actualice el resultado del partido con los detalles de goles." OnClose="CloseModal">
         <EditForm Model="currentItem" OnValidSubmit="SaveAsync">
             <div class="form-grid two-columns">
                 <div>
@@ -70,7 +71,7 @@ else
                     }
                     else
                     {
-                        <InputSelect @bind-Value="currentItem.IdPartido">
+                        <InputSelect @bind-Value="currentItem.IdPartido" @onchange="OnPartidoChanged">
                             <option value="0">Seleccione...</option>
                             @foreach (var item in partidos)
                             {
@@ -89,8 +90,158 @@ else
                     <InputNumber @bind-Value="currentItem.GolesVisitante" />
                 </div>
             </div>
+
+            <!-- Sección de Goles -->
+            @if (currentItem.IdPartido > 0 && (currentItem.GolesLocal > 0 || currentItem.GolesVisitante > 0))
+            {
+                @if (equipoLocal != null && equipoVisitante != null)
+                {
+                    <div class="goles-section">
+                        <h4>Detalle de Goles</h4>
+
+                    <!-- Goles Equipo Local -->
+                    @if (currentItem.GolesLocal > 0)
+                    {
+                        <div class="goles-container">
+                            <h5>Goles de @equipoLocal.Nombre</h5>
+                            <div class="goles-progress">
+                                <span class="progress-label">Goles registrados: @golesLocal.Count de @currentItem.GolesLocal</span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: @((golesLocal.Count * 100) / currentItem.GolesLocal)%"></div>
+                                </div>
+                            </div>
+                            @if (golesLocal.Count > 0)
+                            {
+                                <table class="goles-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Jugador</th>
+                                            <th>Minuto</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var gol in golesLocal)
+                                        {
+                                            <tr>
+                                                <td>@gol.Jugador?.Nombre</td>
+                                                <td>@gol.Minuto'</td>
+                                                <td>
+                                                    <button type="button" class="danger small" @onclick="() => EliminarGol(gol.IdGol)">
+                                                        Eliminar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            @if (golesLocal.Count < currentItem.GolesLocal)
+                            {
+                                <div class="form-grid two-columns">
+                                    <div>
+                                        <label>Jugador</label>
+                                        <InputSelect @bind-Value="nuevoGolLocal.IdJugador">
+                                            <option value="0">Seleccione jugador</option>
+                                            @foreach (var jugador in jugadoresLocal)
+                                            {
+                                                <option value="@jugador.IdJugador">@jugador.Nombre</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div>
+                                        <label>Minuto (1-120)</label>
+                                        <InputNumber @bind-Value="nuevoGolLocal.Minuto" min="1" max="120" />
+                                    </div>
+                                </div>
+                                <button type="button" class="secondary" @onclick="() => AgregarGol(equipoLocal.IdEquipo, nuevoGolLocal)">
+                                    Agregar Gol
+                                </button>
+                            }
+                            @if (golesLocal.Count == currentItem.GolesLocal)
+                            {
+                                <p class="status-message success">✓ Todos los goles del equipo local han sido registrados</p>
+                            }
+                        </div>
+                    }
+
+                    <!-- Goles Equipo Visitante -->
+                    @if (currentItem.GolesVisitante > 0)
+                    {
+                        <div class="goles-container">
+                            <h5>Goles de @equipoVisitante.Nombre</h5>
+                            <div class="goles-progress">
+                                <span class="progress-label">Goles registrados: @golesVisitante.Count de @currentItem.GolesVisitante</span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: @((golesVisitante.Count * 100) / currentItem.GolesVisitante)%"></div>
+                                </div>
+                            </div>
+                            @if (golesVisitante.Count > 0)
+                            {
+                                <table class="goles-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Jugador</th>
+                                            <th>Minuto</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var gol in golesVisitante)
+                                        {
+                                            <tr>
+                                                <td>@gol.Jugador?.Nombre</td>
+                                                <td>@gol.Minuto'</td>
+                                                <td>
+                                                    <button type="button" class="danger small" @onclick="() => EliminarGol(gol.IdGol)">
+                                                        Eliminar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            @if (golesVisitante.Count < currentItem.GolesVisitante)
+                            {
+                                <div class="form-grid two-columns">
+                                    <div>
+                                        <label>Jugador</label>
+                                        <InputSelect @bind-Value="nuevoGolVisitante.IdJugador">
+                                            <option value="0">Seleccione jugador</option>
+                                            @foreach (var jugador in jugadoresVisitante)
+                                            {
+                                                <option value="@jugador.IdJugador">@jugador.Nombre</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div>
+                                        <label>Minuto (1-120)</label>
+                                        <InputNumber @bind-Value="nuevoGolVisitante.Minuto" min="1" max="120" />
+                                    </div>
+                                </div>
+                                <button type="button" class="secondary" @onclick="() => AgregarGol(equipoVisitante.IdEquipo, nuevoGolVisitante)">
+                                    Agregar Gol
+                                </button>
+                            }
+                            @if (golesVisitante.Count == currentItem.GolesVisitante)
+                            {
+                                <p class="status-message success">✓ Todos los goles del equipo visitante han sido registrados</p>
+                            }
+                        </div>
+                    }
+                </div>
+                }
+                else
+                {
+                    <div class="goles-section">
+                        <p class="status-message warning">Cargando información de equipos...</p>
+                    </div>
+                }
+            }
+
             <div class="actions-row">
-                <button type="submit">Guardar</button>
+                <button type="submit">Guardar Resultado</button>
                 <button type="button" class="secondary" @onclick="CloseModal">Cancelar</button>
             </div>
 
@@ -108,6 +259,122 @@ else
         font-weight: bold;
         color: #0066cc;
     }
+
+    .goles-section {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        border-left: 4px solid #0066cc;
+    }
+
+    .goles-section h4 {
+        margin-top: 0;
+        color: #333;
+    }
+
+    .goles-container {
+        margin-bottom: 25px;
+        padding: 12px;
+        background-color: white;
+        border-radius: 4px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .goles-container h5 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        color: #0066cc;
+        font-weight: 600;
+    }
+
+    .goles-progress {
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+    }
+
+    .progress-label {
+        display: block;
+        font-size: 0.9em;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 24px;
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #45a049);
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+
+    .goles-table {
+        width: 100%;
+        margin-bottom: 12px;
+        border-collapse: collapse;
+        font-size: 0.95em;
+    }
+
+    .goles-table thead {
+        background-color: #f0f0f0;
+    }
+
+    .goles-table th,
+    .goles-table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .goles-table th {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .goles-table button.small {
+        padding: 4px 8px;
+        font-size: 0.85em;
+    }
+
+    .status-message {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-weight: 500;
+    }
+
+    .status-message.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-message.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .status-message.warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
 </style>
 
 @code {
@@ -116,6 +383,14 @@ else
     private List<Models.Entities.LookupItem> partidos = new();
     private List<Models.Entities.LookupItem> equipos = new();
     private List<Models.Entities.Partido> todosLosPartidos = new();
+    private List<Models.Entities.Gol> golesLocal = new();
+    private List<Models.Entities.Gol> golesVisitante = new();
+    private Models.Entities.Equipo? equipoLocal;
+    private Models.Entities.Equipo? equipoVisitante;
+    private List<Models.Entities.Jugador> jugadoresLocal = new();
+    private List<Models.Entities.Jugador> jugadoresVisitante = new();
+    private Models.Entities.Gol nuevoGolLocal = new();
+    private Models.Entities.Gol nuevoGolVisitante = new();
     private bool isModalOpen;
     private string modalTitle = "Nuevo resultado";
     private string? errorMessage;
@@ -137,9 +412,27 @@ else
 
     private async Task LoadAsync() => items = await ResultService.GetAllAsync();
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Cargar equipos si hay goles especificados pero los equipos aún no están cargados
+        if (!firstRender && currentItem.IdPartido > 0 && (currentItem.GolesLocal > 0 || currentItem.GolesVisitante > 0) && (equipoLocal == null || equipoVisitante == null))
+        {
+            await CargarGoles();
+            StateHasChanged();
+        }
+    }
+
     private void OpenNewModal()
     {
         currentItem = new();
+        nuevoGolLocal = new();
+        nuevoGolVisitante = new();
+        golesLocal = new();
+        golesVisitante = new();
+        equipoLocal = null;
+        equipoVisitante = null;
+        jugadoresLocal = new();
+        jugadoresVisitante = new();
         modalTitle = "Nuevo resultado";
         isModalOpen = true;
         errorMessage = null;
@@ -160,6 +453,142 @@ else
         modalTitle = "Editar resultado";
         isModalOpen = true;
         errorMessage = null;
+        _ = CargarGoles();
+    }
+
+    private async Task OnPartidoChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int idPartido) && idPartido > 0)
+        {
+            currentItem.IdPartido = idPartido;
+            await CargarGoles();
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnGolesChanged()
+    {
+        // Cuando el usuario ingresa goles, se dispara CargarGoles automáticamente
+        if (currentItem.IdPartido > 0)
+        {
+            await CargarGoles();
+            StateHasChanged();
+        }
+    }
+
+    private async Task CargarGoles()
+    {
+        try
+        {
+            var partido = todosLosPartidos.FirstOrDefault(p => p.IdPartido == currentItem.IdPartido);
+            if (partido == null)
+            {
+                errorMessage = "Partido no encontrado";
+                return;
+            }
+
+            // Obtener nombres de equipos desde LookupItem
+            var equipoLocalLookup = equipos.FirstOrDefault(e => e.Id == partido.IdLocal);
+            var equipoVisitanteLookup = equipos.FirstOrDefault(e => e.Id == partido.IdVisitante);
+
+            // Crear objetos Equipo con la información disponible
+            equipoLocal = equipoLocalLookup != null ? new Models.Entities.Equipo 
+            { 
+                IdEquipo = partido.IdLocal, 
+                Nombre = equipoLocalLookup.Nombre 
+            } : null;
+
+            equipoVisitante = equipoVisitanteLookup != null ? new Models.Entities.Equipo 
+            { 
+                IdEquipo = partido.IdVisitante, 
+                Nombre = equipoVisitanteLookup.Nombre 
+            } : null;
+
+            if (equipoLocal == null || equipoVisitante == null)
+            {
+                errorMessage = "No se encontraron los equipos del partido";
+                return;
+            }
+
+            // Cargar goles existentes
+            golesLocal = await GolService.GetByEquipoPartidoAsync(currentItem.IdPartido, partido.IdLocal);
+            golesVisitante = await GolService.GetByEquipoPartidoAsync(currentItem.IdPartido, partido.IdVisitante);
+
+            // Limpiar campos de nuevo gol
+            nuevoGolLocal = new();
+            nuevoGolVisitante = new();
+
+            // Cargar jugadores por equipo
+            jugadoresLocal = await LookupService.GetJugadoresPorEquipoAsync(partido.IdLocal);
+            jugadoresVisitante = await LookupService.GetJugadoresPorEquipoAsync(partido.IdVisitante);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar goles: {ex.Message}";
+        }
+    }
+
+    private async Task AgregarGol(int idEquipo, Models.Entities.Gol nuevoGol)
+    {
+        try
+        {
+            if (nuevoGol.IdJugador == 0)
+            {
+                errorMessage = "Debe seleccionar un jugador";
+                return;
+            }
+
+            if (nuevoGol.Minuto < 1 || nuevoGol.Minuto > 120)
+            {
+                errorMessage = "El minuto debe estar entre 1 y 120";
+                return;
+            }
+
+            // Validar que no se exceda la cantidad de goles especificada
+            var golesEspecificados = idEquipo == equipoLocal?.IdEquipo ? currentItem.GolesLocal : currentItem.GolesVisitante;
+            var golesActuales = idEquipo == equipoLocal?.IdEquipo ? golesLocal.Count : golesVisitante.Count;
+
+            if (golesActuales >= golesEspecificados)
+            {
+                errorMessage = $"Ya ha registrado todos los {golesEspecificados} gol(es) especificado(s) para este equipo";
+                return;
+            }
+
+            var participacion = await LookupService.GetParticipacionAsync(currentItem.IdPartido, idEquipo);
+            if (participacion == null)
+            {
+                errorMessage = "No se encontró la participación del equipo";
+                return;
+            }
+
+            nuevoGol.IdEquipo = idEquipo;
+            nuevoGol.Codigo = participacion.Codigo;
+
+            await GolService.SaveAsync(nuevoGol);
+            await CargarGoles();
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al agregar gol: {ex.Message}";
+        }
+    }
+
+    private async Task EliminarGol(int idGol)
+    {
+        try
+        {
+            var gol = golesLocal.FirstOrDefault(g => g.IdGol == idGol) ?? golesVisitante.FirstOrDefault(g => g.IdGol == idGol);
+            if (gol != null)
+            {
+                await GolService.DeleteAsync(idGol, gol);
+                await CargarGoles();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar gol: {ex.Message}";
+        }
     }
 
     private async Task SaveAsync()
@@ -180,6 +609,21 @@ else
                 return;
             }
 
+            // Validar que se hayan registrado los detalles de goles
+            if (currentItem.GolesLocal > 0 && golesLocal.Count != currentItem.GolesLocal)
+            {
+                int faltantes = currentItem.GolesLocal - golesLocal.Count;
+                errorMessage = $"Falta registrar {faltantes} gol(es) del equipo local. Debe registrar todos los goles antes de guardar.";
+                return;
+            }
+
+            if (currentItem.GolesVisitante > 0 && golesVisitante.Count != currentItem.GolesVisitante)
+            {
+                int faltantes = currentItem.GolesVisitante - golesVisitante.Count;
+                errorMessage = $"Falta registrar {faltantes} gol(es) del equipo visitante. Debe registrar todos los goles antes de guardar.";
+                return;
+            }
+
             // Calcular el ganador automáticamente basado en los goles
             var partido = todosLosPartidos.FirstOrDefault(p => p.IdPartido == currentItem.IdPartido);
             if (partido != null)
@@ -195,7 +639,6 @@ else
                 else
                 {
                     currentItem.Ganador = null; // Empate
-
                 }
             }
 

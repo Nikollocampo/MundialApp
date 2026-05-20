@@ -46,6 +46,7 @@ namespace MundialApp
             builder.Services.AddScoped<QueryRepository>();
             builder.Services.AddScoped<ReportRepository>();
             builder.Services.AddScoped<AuditRepository>();
+            builder.Services.AddScoped<GolRepository>();
 
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<LookupService>();
@@ -66,7 +67,8 @@ namespace MundialApp
             builder.Services.AddScoped<QueryService>();
             builder.Services.AddScoped<ReportService>();
             builder.Services.AddScoped<AuditService>();
-           
+            builder.Services.AddScoped<GolService>();
+
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
